@@ -22,7 +22,7 @@ export const register = async (req, res) => {
     const user = new userModel({ name, email, password: hashedPassword });
     await user.save();
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET_KEY, {
       expiresIn: "7d",
     });
     res.cookie("token", token, {
@@ -62,7 +62,7 @@ export const login = async (req, res) => {
         .json({ success: false, message: "Invalid email or password" });
     }
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET_KEY, {
       expiresIn: "7d",
     });
     res.cookie("token", token, {
