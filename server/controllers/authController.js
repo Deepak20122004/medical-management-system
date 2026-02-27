@@ -2,6 +2,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import userModel from "../models/userModel.js";
 import transporter from "../config/nodemailer.js";
+import { EMAIL_VERIFY_TEMPLATE, PASSWORD_RESET_TEMPLATE } from "../config/EmailTemplates.js";
 
 export const register = async (req, res) => {
   const { name, email, password } = req.body;
@@ -74,11 +75,17 @@ export const login = async (req, res) => {
         .status(400)
         .json({ success: false, message: "Invalid email or password" });
     }
+    const userData = await userModel.findById(user._id);
+    if (!userData.isAccountVerified) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Please verify your email to login" });
+    }
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET_KEY, {
       expiresIn: "7d",
     });
-    console.log("Secret in login:", process.env.JWT_SECRET_KEY);
+    // console.log("Secret in login:", process.env.JWT_SECRET_KEY);
     res.cookie("token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -88,7 +95,7 @@ export const login = async (req, res) => {
 
     return res.status(200).json({ success: true, message: "Login successful" });
   } catch (error) {
-    console.error("Error in login controller:", error);
+    // console.error("Error in login controller:", error);
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -133,7 +140,8 @@ export const sendVerifyOtp = async (req, res) => {
       from: process.env.SENDER_EMAIL,
       to: user.email,
       subject: "Verify your account",
-      text: `Hello ${user.name},\n\nYour verification OTP is: ${otp}\n\nPlease use this OTP to verify your account.\n\nThank you!\nMedical Management System Team`,
+      // text: `Hello ${user.name},\n\nYour verification OTP is: ${otp}\n\nPlease use this OTP to verify your account.\n\nThank you!\nMedical Management System Team`,
+      html: EMAIL_VERIFY_TEMPLATE.replace("{{email}}", user.email).replace("{{otp}}", otp),
     };
 
     await transporter.sendMail(mailOptions);
@@ -225,7 +233,8 @@ export const sendResetPasswordOtp = async (req, res) => {
       from: process.env.SENDER_EMAIL,
       to: user.email,
       subject: "Password Reset OTP",
-      text: `Hello ${user.name},\n\nYour password reset OTP is: ${otp}\n\nPlease use this OTP to reset your password. This OTP will expire in 10 minutes.\n\nThank you!\nMedical Management System Team`,
+      // text: `Hello ${user.name},\n\nYour password reset OTP is: ${otp}\n\nPlease use this OTP to reset your password. This OTP will expire in 10 minutes.\n\nThank you!\nMedical Management System Team`,
+      html: PASSWORD_RESET_TEMPLATE.replace("{{email}}", user.email).replace("{{otp}}", otp),
     };
     await transporter.sendMail(mailOptions);
 
@@ -242,12 +251,10 @@ export const sendResetPasswordOtp = async (req, res) => {
 export const resetPassword = async (req, res) => {
   const { email, otp, newPassword } = req.body;
   if (!email || !otp || !newPassword) {
-    return res
-      .status(400)
-      .json({
-        success: false,
-        message: "Email, OTP and new password are required",
-      });
+    return res.status(400).json({
+      success: false,
+      message: "Email, OTP and new password are required",
+    });
   }
   try {
     const user = await userModel.findOne({ email });
@@ -264,7 +271,7 @@ export const resetPassword = async (req, res) => {
         .status(400)
         .json({ success: false, message: "OTP has expired" });
     }
-    
+
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     user.password = hashedPassword;
     user.resetOtp = "";
