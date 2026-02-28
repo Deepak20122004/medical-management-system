@@ -1,13 +1,17 @@
 import axios from "axios";
 import React, { useState } from "react";
+import { useContext } from "react";
 import { useEffect } from "react";
-import jsPDF from "jspdf";
 import { toast } from "react-toastify";
+import { AppContext } from "../../context/AppContext";
+
+
 const gstOptions = ["0%", "3%", "5%", "12%", "18%", "28%"];
-
 const Stock = () => {
-  const API = "http://localhost:4000/api/stock";
-
+const { backendUrl } = useContext(AppContext);
+console.log(backendUrl)
+// const API = "http://localhost:4000/api/stock";
+// http://localhost:4000
   const [data, setData] = useState([]);
   const [stats, setStats] = useState({
     totalStock: 0,
@@ -16,6 +20,7 @@ const Stock = () => {
   });
 
   const [loading, setLoading] = useState(false);
+
   const [search, setSearch] = useState("");
 
   const [showInvoiceForm, setShowInvoiceForm] = useState(false);
@@ -56,7 +61,7 @@ const Stock = () => {
   const fetchStock = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(API);
+      const res = await axios.get(`${backendUrl}/api/stock`);
       const raw = res.data.data || [];
       const list = raw.map((inv, idx) => ({
         ...inv,
@@ -73,7 +78,7 @@ const Stock = () => {
 
   const fetchStats = async () => {
     try {
-      const res = await axios.get(`${API}/stats`);
+      const res = await axios.get(`${backendUrl}/api/stock/stats`);
       setStats(res.data);
     } catch {
       toast.error("Failed to fetch stats");
@@ -111,7 +116,7 @@ const Stock = () => {
       (async () => {
         try {
           setLoading(true);
-          await axios.put(`${API}/${editingExisting.invoiceId}/medicine/${editingExisting.itemId}`, itemForm);
+          await axios.put(`${backendUrl}/api/stock/${editingExisting.invoiceId}/medicine/${editingExisting.itemId}`, itemForm);
           toast.success("Medicine updated");
           setEditingExisting({ invoiceId: null, itemId: null });
           setShowMedicineForm(false);
@@ -163,7 +168,7 @@ const Stock = () => {
 
     try {
       setLoading(true);
-      await axios.post(`${API}/add`, {
+      await axios.post(`${backendUrl}/api/stock/add`, {
         distributor: invoiceForm.distributor,
         invoiceNumber: invoiceForm.invoiceNumber,
         invoiceDate: invoiceForm.invoiceDate,
@@ -202,7 +207,7 @@ const Stock = () => {
     if (!deleteConfirm.invoiceId && deleteConfirm.invoiceId !== 0) return;
     try {
       setLoading(true);
-      await axios.delete(`${API}/${deleteConfirm.invoiceId}/medicine/${deleteConfirm.itemId}`);
+      await axios.delete(`${backendUrl}/api/stock/${deleteConfirm.invoiceId}/medicine/${deleteConfirm.itemId}`);
       toast.success("Medicine deleted");
       setDeleteConfirm({ show: false, invoiceId: null, itemId: null });
       setViewInvoice(null);
@@ -237,28 +242,13 @@ const Stock = () => {
     setShowMedicineForm(true);
   };
 
-  /* ================= UPDATE ================= */
-
-  // const handleUpdateMedicine = async (invoiceId) => {
-  //   try {
-  //     await axios.put(`${API}/${invoiceId}/medicine/${editIndex}`, itemForm);
-
-  //     toast.success("Medicine updated");
-  //     fetchStock();
-  //     fetchStats();
-  //     setEditIndex(null);
-  //     setShowMedicineForm(false);
-  //   } catch {
-  //     toast.error("Update failed");
-  //   }
-  // };
 
   /*=============ADD INVOICE DELETE=========*/
   const handleDeleteInvoice = async (invoiceId) => {
     if (!window.confirm("Delete full invoice?")) return;
 
     try {
-      await axios.delete(`${API}/${invoiceId}`);
+      await axios.delete(`${backendUrl}/api/stock/${invoiceId}`);
       toast.success("Invoice deleted");
       fetchStock();
       fetchStats();
@@ -266,44 +256,6 @@ const Stock = () => {
       toast.error("Invoice delete failed");
     }
   };
-
-  /* ===========ADD INVOICE EDIT =========*/
-
-  const handleEditInvoice = (invoice) => {
-    setInvoiceForm({
-      distributor: invoice.distributor,
-      invoiceNumber: invoice.invoiceNumber,
-      invoiceDate: invoice.invoiceDate,
-    });
-
-    setCurrentItems(invoice.items || invoice.medicines);
-    setEditIndex(invoice._id);
-    setShowMedicineForm(true);
-  };
-
-  /* ================= PDF ================= */
-
-  // const exportInvoicePDF = (invoice) => {
-  //   const doc = new jsPDF();
-
-  //   doc.text(`Invoice No: ${invoice.invoiceNumber}`, 10, 10);
-  //   doc.text(`Distributor: ${invoice.distributor}`, 10, 20);
-  //   doc.text(`Date: ${invoice.invoiceDate}`, 10, 30);
-
-  //   let y = 40;
-  //   const pdfItems = invoice.items || invoice.medicines || [];
-  //   pdfItems.forEach((m, i) => {
-  //     const name = m.medicine || m.product || "";
-  //     doc.text(
-  //       `${i + 1}. ${name} | Qty: ${m.quantity} | MRP: ₹${m.mrp}`,
-  //       10,
-  //       y,
-  //     );
-  //     y += 10;
-  //   });
-
-  //   doc.save(`Invoice-${invoice.invoiceNumber}.pdf`);
-  // };
 
   /* ================= PAGINATION ================= */
 
@@ -313,12 +265,17 @@ const Stock = () => {
   const indexOfLast = currentPage * perPage;
   const indexOfFirst = indexOfLast - perPage;
 
-  const filtered = data.filter((inv) =>
-    (inv.invoiceNumber || "").toLowerCase().includes(search.toLowerCase()),
-  );
+  const filtered = data.filter((inv) => {
+    const q = (search || "").toLowerCase();
+    return (
+      (inv.invoiceNumber || "").toLowerCase().includes(q) ||
+      (inv.distributor || "").toLowerCase().includes(q)
+    );
+  });
 
   const currentInvoices = filtered.slice(indexOfFirst, indexOfLast);
   const totalPages = Math.ceil(filtered.length / perPage);
+
   useEffect(() => {
     setCurrentPage(1);
   }, [search]);
@@ -345,19 +302,43 @@ const Stock = () => {
 
       {/* Search and Add Button */}
       <div className="mb-6 flex flex-col sm:flex-row gap-3 items-center justify-between">
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search by medicine or supplier..."
-          className="w-full sm:w-72 px-4 py-2 rounded-md border border-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400"
-        />
-        <button
-          className="bg-blue-600 text-white px-6 py-2 rounded-md font-semibold shadow hover:bg-blue-700 transition"
-          onClick={() => setShowInvoiceForm(true)}
-        >
-          + Add Stock
-        </button>
+        <div className="w-full sm:w-80 relative bg-white rounded-xl border border-gray-100 shadow-sm px-3 py-2 flex items-center">
+          <span className="text-blue-500 mr-2">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M12.9 14.32a8 8 0 111.414-1.414l4.387 4.386a1 1 0 01-1.414 1.415l-4.387-4.387zM14 8a6 6 0 11-12 0 6 6 0 0112 0z" clipRule="evenodd" />
+            </svg>
+          </span>
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search by medicine or distributor..."
+            className="flex-1 bg-transparent outline-none placeholder-gray-400 text-sm"
+          />
+          {search ? (
+            <button
+              type="button"
+              onClick={() => setSearch("")}
+              className="ml-2 text-xs text-gray-500 px-2 py-1 rounded hover:bg-gray-100"
+            >
+              Clear
+            </button>
+          ) : (
+            <span className="ml-2 text-xs text-gray-300">Quick search</span>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-2 rounded-full font-semibold shadow-lg hover:scale-[1.02] transform transition"
+            onClick={() => setShowInvoiceForm(true)}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+            </svg>
+            <span className="hidden sm:inline">Add Stock</span>
+          </button>
+        </div>
       </div>
 
       {/* Step 1: Invoice Form Modal */}

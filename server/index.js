@@ -12,17 +12,27 @@ const app = express();
 const port = process.env.PORT || 4000;
 connectDB();
 
-const allowedOrigins = [ "http://localhost:5173"];
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://medical-management-system-v1zh.onrender.com",
+];
 
 app.use(express.json());
 app.use(cookieParser());
-app.use(cors({credentials:true, origin: allowedOrigins}));
+app.use(
+  cors({
+    origin: allowedOrigins,
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  }),
+);
 
 // API endpoints
 
 app.use("/api/auth", authRouter);
 app.use("/api/user", userRouter);
-app.use("/api/distributor",distributorRoutes)
+app.use("/api/distributor", distributorRoutes);
 app.use("/api/stock", stockRoutes);
 
 app.listen(port, () => {

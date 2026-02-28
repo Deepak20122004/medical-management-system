@@ -43,7 +43,6 @@ const ResertPassword = () => {
   };
 
   const onSubmitEmail = async (e) => {
-    console.log(email, "email for reset password")
     e.preventDefault();
     try {
       const { data } = await axios.post(
@@ -69,17 +68,17 @@ const ResertPassword = () => {
   const onSubmitNewPassword = async (e) => {
     e.preventDefault();
     try {
-      console.log("sumit otp")
+      // console.log("sumit otp")
       const { data } = await axios.post(
         `${backendUrl}/api/auth/reset-password`,
         { email, otp, newPassword },
       );
       
-      console.log(data);
+      // console.log(data);
       data.success ? toast.success(data.message) : toast.error(data.message);
-      data.success && navigate("/admin");
+      data.success && navigate("/adminhome");
     } catch (error) {
-      console.log(error ,"reset password error");
+      // console.log(error ,"reset password error");
       toast.error(error.message);
     }
   };

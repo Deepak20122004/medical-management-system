@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
-
-const backendUrl = "http://localhost:4000";
+import { useContext } from "react";
+import { AppContext } from "../../context/AppContext";
 
 const Distributor = () => {
+  const { backendUrl } = useContext(AppContext);
   const [deleteId, setDeleteId] = useState(null);
   const [data, setData] = useState([]);
   const [form, setForm] = useState({
@@ -25,17 +26,16 @@ const Distributor = () => {
     fetchData();
   }, []);
 
-
   const confirmDelete = async () => {
-  try {
-    await axios.delete(`${backendUrl}/api/distributor/${deleteId}`);
-    toast.success("Distributor Deleted Successfully");
-    setDeleteId(null);
-    fetchData();
-  } catch (error) {
-    toast.error("Delete Failed");
-  }
-};
+    try {
+      await axios.delete(`${backendUrl}/api/distributor/${deleteId}`);
+      toast.success("Distributor Deleted Successfully");
+      setDeleteId(null);
+      fetchData();
+    } catch (error) {
+      toast.error("Delete Failed");
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -134,39 +134,38 @@ const Distributor = () => {
         </table>
       </div>
       {deleteId && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 animate-fadeIn">
-      
-      <h3 className="text-xl font-bold text-red-600 text-center mb-4">
-        ⚠ Confirm Delete
-      </h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 animate-fadeIn">
+            <h3 className="text-xl font-bold text-red-600 text-center mb-4">
+              ⚠ Confirm Delete
+            </h3>
 
-      <p className="text-gray-600 text-center mb-6">
-        Are you sure you want to delete this distributor?
-        <br />
-        <span className="text-sm text-red-500">
-          This action cannot be undone.
-        </span>
-      </p>
+            <p className="text-gray-600 text-center mb-6">
+              Are you sure you want to delete this distributor?
+              <br />
+              <span className="text-sm text-red-500">
+                This action cannot be undone.
+              </span>
+            </p>
 
-      <div className="flex justify-center gap-4">
-        <button
-          onClick={() => setDeleteId(null)}
-          className="px-5 py-2 bg-gray-200 rounded-lg font-semibold hover:bg-gray-300 transition"
-        >
-          Cancel
-        </button>
+            <div className="flex justify-center gap-4">
+              <button
+                onClick={() => setDeleteId(null)}
+                className="px-5 py-2 bg-gray-200 rounded-lg font-semibold hover:bg-gray-300 transition"
+              >
+                Cancel
+              </button>
 
-        <button
-          onClick={confirmDelete}
-          className="px-5 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition"
-        >
-          Yes, Delete
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+              <button
+                onClick={confirmDelete}
+                className="px-5 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition"
+              >
+                Yes, Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
