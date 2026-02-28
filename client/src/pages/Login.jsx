@@ -61,7 +61,7 @@ const Login = () => {
         if (data.success) {
           setIsLoggedIn(true);
           getUserData();
-          Navigate("/admin"); // redirect to send otp
+          Navigate("/adminhome"); // redirect to send otp
         } else {
           console.log("login data", data);
           // toast.error(data.message);

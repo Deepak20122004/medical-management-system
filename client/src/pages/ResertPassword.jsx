@@ -77,7 +77,7 @@ const ResertPassword = () => {
       
       console.log(data);
       data.success ? toast.success(data.message) : toast.error(data.message);
-      data.success && navigate("/login");
+      data.success && navigate("/admin");
     } catch (error) {
       console.log(error ,"reset password error");
       toast.error(error.message);

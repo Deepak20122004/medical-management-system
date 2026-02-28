@@ -10,7 +10,7 @@ const ProtectedRoutes = ({ children }) => {
     if (!isLoggedIn) Navigate("/login");
   }, [isLoggedIn, Navigate]);
 
-  return children;
+  return children;n 
 };
 
 export default ProtectedRoutes;

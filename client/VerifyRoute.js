@@ -6,12 +6,8 @@ const VerifyRoute = ({ children }) => {
   const { isLoggedin, userData } = useContext(AppContext);
  const navigate = useNavigate();
 
-  if (!isLoggedin) {
+  if (isLoggedin ||userData?.isAccountVerified) {
     return navigate("/");
-  }
-
-  if (userData?.isAccountVerified) {
-    return navigate("/login");
   }
 
   return children;

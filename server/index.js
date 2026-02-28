@@ -5,8 +5,8 @@ import cookieParser from "cookie-parser";
 import connectDB from "./config/mongodb.js";
 import authRouter from "./routes/authRoutes.js";
 import userRouter from "./routes/usreRoutes.js";
-
-
+import distributorRoutes from "./routes/distributorRoutes.js";
+import stockRoutes from "./routes/stockRoutes.js";
 
 const app = express();
 const port = process.env.PORT || 4000;
@@ -20,11 +20,10 @@ app.use(cors({credentials:true, origin: allowedOrigins}));
 
 // API endpoints
 
-app.get("/", (req, res) => {
-  res.send("Hello !");
-});
 app.use("/api/auth", authRouter);
 app.use("/api/user", userRouter);
+app.use("/api/distributor",distributorRoutes)
+app.use("/api/stock", stockRoutes);
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);

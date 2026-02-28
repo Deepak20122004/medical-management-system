@@ -4,16 +4,18 @@ import { AppContext } from "../context/AppContext";
 import axios from "axios";
 import { toast } from "react-toastify";
 
-const Header = () => {
+const Content = () => {
   const navigate = useNavigate();
   const { backendUrl } = useContext(AppContext);
   const { userData } = useContext(AppContext);
   const adminUser = userData?.isAccountVerified || false;
   const userEmail = userData.email;
 
+  console.log(userEmail);
+
   const RegisterHandler = async () => {
     if (adminUser) {
-      navigate("/admin");
+      navigate("/adminhome");
     } else if (userEmail || !adminUser) {
       try {
         axios.defaults.withCredentials = true;
@@ -23,18 +25,17 @@ const Header = () => {
 
         if (data.success) {
           toast.success(data.message);
-          navigate("/email-verify")
+          navigate("/email-verify");
         } else {
           toast.error(data.message);
         }
       } catch (error) {
-        toast.error(error.message);
+        navigate("/login");
       }
     } else {
       navigate("/login");
     }
   };
-
 
   return (
     <div className="min-h-screen bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 flex flex-col items-center justify-center text-center text-white p-4">
@@ -56,4 +57,4 @@ const Header = () => {
   );
 };
 
-export default Header;
+export default Content;
