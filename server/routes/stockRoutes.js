@@ -3,25 +3,23 @@ import {
   addStock,
   getAllStock,
   getStockByInvoiceNumber,
+  updateInvoice,
+  deleteInvoice,
   updateMedicine,
-  deleteMedicine
+  deleteMedicine,
 } from "../controllers/stockController.js";
 
 const router = express.Router();
 
-// Add invoice + medicines
+/* Invoice Routes */
 router.post("/add", addStock);
-
-// Get all invoices
 router.get("/", getAllStock);
-
-// Get single invoice by invoice number
 router.get("/invoice/:invoiceNumber", getStockByInvoiceNumber);
+router.put("/:invoiceId", updateInvoice);
+router.delete("/:invoiceId", deleteInvoice);
 
-// Edit medicine
+/* Medicine Routes */
 router.put("/:invoiceId/medicine/:medicineId", updateMedicine);
-
-// Delete medicine
 router.delete("/:invoiceId/medicine/:medicineId", deleteMedicine);
 
 export default router;

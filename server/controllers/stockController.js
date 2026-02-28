@@ -80,7 +80,64 @@ export const getStockByInvoiceNumber = async (req, res) => {
     res.status(500).json({ success: false });
   }
 };
+/* ================= UPDATE INVOICE ================= */
 
+/* ================= UPDATE INVOICE ================= */
+export const updateInvoice = async (req, res) => {
+  try {
+    const { invoiceId } = req.params;
+    const { distributor, invoiceNumber, invoiceDate } = req.body;
+
+    const invoice = await Stock.findById(invoiceId);
+
+    if (!invoice) {
+      return res.status(404).json({
+        success: false,
+        message: "Invoice not found",
+      });
+    }
+
+    invoice.distributor = distributor || invoice.distributor;
+    invoice.invoiceNumber = invoiceNumber || invoice.invoiceNumber;
+    invoice.invoiceDate = invoiceDate || invoice.invoiceDate;
+
+    await invoice.save();
+
+    res.json({
+      success: true,
+      message: "Invoice updated successfully",
+      invoice,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+/* ================= DELETE INVOICE ================= */
+/* ================= DELETE INVOICE ================= */
+export const deleteInvoice = async (req, res) => {
+  try {
+    const { invoiceId } = req.params;
+
+    const invoice = await Stock.findById(invoiceId);
+
+    if (!invoice) {
+      return res.status(404).json({
+        success: false,
+        message: "Invoice not found",
+      });
+    }
+
+    await Stock.findByIdAndDelete(invoiceId);
+
+    res.json({
+      success: true,
+      message: "Invoice deleted successfully",
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
 
 /* ================= UPDATE MEDICINE ================= */
 export const updateMedicine = async (req, res) => {

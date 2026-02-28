@@ -30,7 +30,7 @@ const Content = () => {
           toast.error(data.message);
         }
       } catch (error) {
-        navigate("/login");
+       toast.error(error.message)
       }
     } else {
       navigate("/login");
