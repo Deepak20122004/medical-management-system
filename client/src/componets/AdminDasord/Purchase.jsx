@@ -92,46 +92,64 @@ const Distributor = () => {
           </button>
         </form>
 
-        <table className="w-full text-sm">
-          <thead className="bg-blue-100 text-blue-700">
-            <tr>
-              <th className="p-2">GSTIN</th>
-              <th className="p-2">District</th>
-              <th className="p-2">Name</th>
-              <th className="p-2">Mobile</th>
-              <th className="p-2">Licence</th>
-              <th className="p-2">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.map((d) => (
-              <tr key={d._id} className="border-b hover:bg-blue-50">
-                <td className="p-2">{d.gstin}</td>
-                <td className="p-2">{d.district}</td>
-                <td className="p-2">{d.name}</td>
-                <td className="p-2">{d.mobile}</td>
-                <td className="p-2">{d.licence}</td>
-                <td className="p-2 flex gap-2 justify-center">
-                  <button
-                    onClick={() => handleEdit(d)}
-                    className="bg-yellow-400 px-3 py-1 rounded text-white"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => setDeleteId(d._id)}
-                    className="bg-red-500 px-3 py-1 rounded text-white hover:bg-red-600 transition"
-                  >
-                    Delete
-                  </button>
-                  <button className="bg-blue-500 px-3 py-1 rounded text-white">
-                    History
-                  </button>
-                </td>
+        {/* Mobile-first cards (primary for small screens) */}
+        <div className="space-y-3 md:hidden">
+          {data.map((d) => (
+            <div key={d._id} className="bg-white rounded-xl shadow p-4 border">
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0">
+                  <div className="h-12 w-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 font-bold">{(d.name || "").charAt(0)}</div>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-semibold text-gray-800 truncate">{d.name}</h3>
+                    <div className="text-xs text-gray-500">{d.mobile}</div>
+                  </div>
+                  <div className="mt-1 text-xs text-gray-500 truncate">{d.district} • {d.gstin}</div>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <button onClick={() => handleEdit(d)} className="px-3 py-1 rounded-lg bg-yellow-400 text-white text-xs shadow-sm">Edit</button>
+                    <button onClick={() => setDeleteId(d._id)} className="px-3 py-1 rounded-lg bg-red-500 text-white text-xs shadow-sm">Delete</button>
+                    <button className="px-3 py-1 rounded-lg bg-blue-500 text-white text-xs shadow-sm">History</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Desktop table (visible on md+) */}
+        <div className="hidden md:block">
+          <table className="w-full text-sm bg-white rounded-lg overflow-hidden shadow-sm">
+            <thead className="bg-blue-100 text-blue-700">
+              <tr>
+                <th className="p-3 text-left">GSTIN</th>
+                <th className="p-3 text-left">District</th>
+                <th className="p-3 text-left">Name</th>
+                <th className="p-3 text-left">Mobile</th>
+                <th className="p-3 text-left">Licence</th>
+                <th className="p-3 text-center">Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {data.map((d) => (
+                <tr key={d._id} className="border-b last:border-none hover:bg-blue-50 transition">
+                  <td className="p-3">{d.gstin}</td>
+                  <td className="p-3">{d.district}</td>
+                  <td className="p-3 font-medium text-gray-700">{d.name}</td>
+                  <td className="p-3">{d.mobile}</td>
+                  <td className="p-3">{d.licence}</td>
+                  <td className="p-3 text-center">
+                    <div className="inline-flex items-center gap-2">
+                      <button onClick={() => handleEdit(d)} className="bg-yellow-400 px-3 py-1 rounded text-white">Edit</button>
+                      <button onClick={() => setDeleteId(d._id)} className="bg-red-500 px-3 py-1 rounded text-white hover:bg-red-600 transition">Delete</button>
+                      <button className="bg-blue-500 px-3 py-1 rounded text-white">History</button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
       {deleteId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
