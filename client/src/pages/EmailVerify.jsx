@@ -51,7 +51,7 @@ const EmailVerify = () => {
         toast.success(data.message);
           setIsLoggedIn(true);
           getUserData();
-        navigate("/admin"); // redirect to home page
+        navigate("/adminhome"); // redirect to home page
       } else {
         toast("invaild otp");
       }

@@ -49,13 +49,14 @@ const medicineSchema = new mongoose.Schema(
       min: 0,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 const stockSchema = new mongoose.Schema(
   {
     distributor: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Distributor",
       required: true,
       trim: true,
     },
@@ -71,7 +72,7 @@ const stockSchema = new mongoose.Schema(
     },
     medicines: [medicineSchema],
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 const Stock = mongoose.model("Stock", stockSchema);

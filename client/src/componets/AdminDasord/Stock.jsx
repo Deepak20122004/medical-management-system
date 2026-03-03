@@ -5,13 +5,12 @@ import { useEffect } from "react";
 import { toast } from "react-toastify";
 import { AppContext } from "../../context/AppContext";
 
-
 const gstOptions = ["0%", "3%", "5%", "12%", "18%", "28%"];
 const Stock = () => {
-const { backendUrl } = useContext(AppContext);
-console.log(backendUrl)
-// const API = "http://localhost:4000/api/stock";
-// http://localhost:4000
+  const { backendUrl } = useContext(AppContext);
+  console.log(backendUrl);
+  // const API = "http://localhost:4000/api/stock";
+  // http://localhost:4000
   const [data, setData] = useState([]);
   const [stats, setStats] = useState({
     totalStock: 0,
@@ -26,6 +25,8 @@ console.log(backendUrl)
   const [showInvoiceForm, setShowInvoiceForm] = useState(false);
   const [showMedicineForm, setShowMedicineForm] = useState(false);
   const [viewInvoice, setViewInvoice] = useState(null);
+
+ 
 
   const [invoiceForm, setInvoiceForm] = useState({
     distributor: "",
@@ -49,7 +50,10 @@ console.log(backendUrl)
 
   const [editIndex, setEditIndex] = useState(null);
   const [success, setSuccess] = useState(false);
-  const [editingExisting, setEditingExisting] = useState({ invoiceId: null, itemId: null });
+  const [editingExisting, setEditingExisting] = useState({
+    invoiceId: null,
+    itemId: null,
+  });
   const [deleteConfirm, setDeleteConfirm] = useState({
     show: false,
     invoiceId: null,
@@ -78,17 +82,34 @@ console.log(backendUrl)
 
   const fetchStats = async () => {
     try {
-      const res = await axios.get(`${backendUrl}/api/stock/stats`);
+      const res = await axios.get(`${backendUrl}/api/stock`);
       setStats(res.data);
     } catch {
       toast.error("Failed to fetch stats");
     }
   };
 
+  /*=========*/
+  const [distributors, setDistributors] = useState([]);
+
+  const fetchDistributors = async () => {
+    try {
+      const res = await axios.get("http://localhost:4000/api/distributor");
+      setDistributors(res.data.data);
+    } catch {
+      toast.error("Failed to load distributors");
+    }
+  };
+
   useEffect(() => {
     fetchStock();
     fetchStats();
+    fetchDistributors();
   }, []);
+
+  console.log(stats);
+
+ 
 
   const handleInvoiceChange = (e) => {
     const { name, value } = e.target;
@@ -116,7 +137,10 @@ console.log(backendUrl)
       (async () => {
         try {
           setLoading(true);
-          await axios.put(`${backendUrl}/api/stock/${editingExisting.invoiceId}/medicine/${editingExisting.itemId}`, itemForm);
+          await axios.put(
+            `${backendUrl}/api/stock/${editingExisting.invoiceId}/medicine/${editingExisting.itemId}`,
+            itemForm,
+          );
           toast.success("Medicine updated");
           setEditingExisting({ invoiceId: null, itemId: null });
           setShowMedicineForm(false);
@@ -198,7 +222,6 @@ console.log(backendUrl)
     }
   };
 
-
   const handleShowDeleteConfirm = (invoiceId, itemIndex) => {
     setDeleteConfirm({ show: true, invoiceId, itemId: itemIndex });
   };
@@ -207,7 +230,9 @@ console.log(backendUrl)
     if (!deleteConfirm.invoiceId && deleteConfirm.invoiceId !== 0) return;
     try {
       setLoading(true);
-      await axios.delete(`${backendUrl}/api/stock/${deleteConfirm.invoiceId}/medicine/${deleteConfirm.itemId}`);
+      await axios.delete(
+        `${backendUrl}/api/stock/${deleteConfirm.invoiceId}/medicine/${deleteConfirm.itemId}`,
+      );
       toast.success("Medicine deleted");
       setDeleteConfirm({ show: false, invoiceId: null, itemId: null });
       setViewInvoice(null);
@@ -242,7 +267,6 @@ console.log(backendUrl)
     setShowMedicineForm(true);
   };
 
-
   /*=============ADD INVOICE DELETE=========*/
   const handleDeleteInvoice = async (invoiceId) => {
     if (!window.confirm("Delete full invoice?")) return;
@@ -267,10 +291,16 @@ console.log(backendUrl)
 
   const filtered = data.filter((inv) => {
     const q = (search || "").toLowerCase();
-    return (
-      (inv.invoiceNumber || "").toLowerCase().includes(q) ||
-      (inv.distributor || "").toLowerCase().includes(q)
-    );
+    const invNumber = (inv.invoiceNumber || "").toLowerCase();
+    let distributorName = "";
+    if (inv.distributor) {
+      distributorName =
+        typeof inv.distributor === "string"
+          ? inv.distributor
+          : inv.distributor.name || "";
+      distributorName = distributorName.toLowerCase();
+    }
+    return invNumber.includes(q) || distributorName.includes(q);
   });
 
   const currentInvoices = filtered.slice(indexOfFirst, indexOfLast);
@@ -279,33 +309,42 @@ console.log(backendUrl)
   useEffect(() => {
     setCurrentPage(1);
   }, [search]);
-     return (
+  return (
     <div className="max-w-6xl mx-auto bg-white/90 rounded-xl shadow-lg p-6 md:p-10 mt-8">
       <h2 className="text-2xl font-bold text-blue-700 mb-6 text-center">
         Stock Management
       </h2>
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mb-8">
+      {/* <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mb-8">
         <div className="bg-gradient-to-r from-blue-500 to-blue-400 text-white rounded-lg p-6 shadow flex flex-col items-center">
           <span className="text-lg font-semibold">Total Stock</span>
-          <span className="text-2xl font-bold mt-2">{"totalStock"}</span>
+          <span className="text-2xl font-bold mt-2">{stats.totalStock}</span>
         </div>
         <div className="bg-gradient-to-r from-yellow-500 to-yellow-400 text-white rounded-lg p-6 shadow flex flex-col items-center">
           <span className="text-lg font-semibold">Low Stock Items</span>
-          <span className="text-2xl font-bold mt-2">{"lowStock"}</span>
+          <span className="text-2xl font-bold mt-2">{stats.lowStock}</span>
         </div>
         <div className="bg-gradient-to-r from-red-500 to-red-400 text-white rounded-lg p-6 shadow flex flex-col items-center">
           <span className="text-lg font-semibold">Expired Items</span>
-          <span className="text-2xl font-bold mt-2">{"expired"}</span>
+          <span className="text-2xl font-bold mt-2">{stats.expired}</span>
         </div>
-      </div>
+      </div> */}
 
       {/* Search and Add Button */}
       <div className="mb-6 flex flex-col sm:flex-row gap-3 items-center justify-between">
         <div className="w-full sm:w-80 relative bg-white rounded-xl border border-gray-100 shadow-sm px-3 py-2 flex items-center">
           <span className="text-blue-500 mr-2">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M12.9 14.32a8 8 0 111.414-1.414l4.387 4.386a1 1 0 01-1.414 1.415l-4.387-4.387zM14 8a6 6 0 11-12 0 6 6 0 0112 0z" clipRule="evenodd" />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fillRule="evenodd"
+                d="M12.9 14.32a8 8 0 111.414-1.414l4.387 4.386a1 1 0 01-1.414 1.415l-4.387-4.387zM14 8a6 6 0 11-12 0 6 6 0 0112 0z"
+                clipRule="evenodd"
+              />
             </svg>
           </span>
           <input
@@ -333,8 +372,17 @@ console.log(backendUrl)
             className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-2 rounded-full font-semibold shadow-lg hover:scale-[1.02] transform transition"
             onClick={() => setShowInvoiceForm(true)}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fillRule="evenodd"
+                d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
+                clipRule="evenodd"
+              />
             </svg>
             <span className="hidden sm:inline">Add Stock</span>
           </button>
@@ -365,16 +413,20 @@ console.log(backendUrl)
               >
                 Distributor Name
               </label>
-              <input
-                id="distributor"
-                type="text"
+              <select
                 name="distributor"
                 value={invoiceForm.distributor}
                 onChange={handleInvoiceChange}
-                className="px-4 py-2 rounded-lg border border-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400 text-base"
-                placeholder="Enter distributor name"
+                className="px-4 py-2 border rounded-lg"
                 required
-              />
+              >
+                <option value="">Select Distributor</option>
+                {distributors.map((d) => (
+                  <option key={d._id} value={d._id}>
+                    {d.name}
+                  </option>
+                ))}
+              </select>
             </div>
             <div className="flex flex-col gap-2">
               <label
@@ -428,12 +480,28 @@ console.log(backendUrl)
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl overflow-hidden relative animate-fadeIn border border-blue-50 flex flex-col max-h-[85vh]">
             <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-600 to-blue-400 text-white">
               <div className="flex items-center gap-3">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 opacity-90" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m2 0a2 2 0 012 2v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4a2 2 0 012-2h14zM7 8V6a5 5 0 0110 0v2" />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-7 w-7 opacity-90"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M9 12h6m2 0a2 2 0 012 2v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4a2 2 0 012-2h14zM7 8V6a5 5 0 0110 0v2"
+                  />
                 </svg>
                 <div>
-                  <div className="text-lg font-bold">Add Medicines to Invoice</div>
-                  <div className="text-xs opacity-90">Invoice: {invoiceForm.invoiceNumber || "(not set)"} • Distributor: {invoiceForm.distributor || "(not set)"}</div>
+                  <div className="text-lg font-bold">
+                    Add Medicines to Invoice
+                  </div>
+                  <div className="text-xs opacity-90">
+                    Invoice: {invoiceForm.invoiceNumber || "(not set)"} •
+                    Distributor: {invoiceForm.distributor || "(not set)"}
+                  </div>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -443,7 +511,11 @@ console.log(backendUrl)
                   onClick={() => {
                     setShowMedicineForm(false);
                     setCurrentItems([]);
-                    setInvoiceForm({ distributor: "", invoiceNumber: "", invoiceDate: "" });
+                    setInvoiceForm({
+                      distributor: "",
+                      invoiceNumber: "",
+                      invoiceDate: "",
+                    });
                   }}
                 >
                   &times;
@@ -452,201 +524,225 @@ console.log(backendUrl)
             </div>
             <div className="flex-1 overflow-hidden flex flex-col md:flex-row gap-4 p-4">
               <div className="flex-1 overflow-y-auto pr-2">
-                <form onSubmit={handleAddItem} className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div className="flex flex-col gap-1">
-                <label
-                  htmlFor="medicine"
-                  className="font-semibold text-blue-700"
+                <form
+                  onSubmit={handleAddItem}
+                  className="grid grid-cols-1 md:grid-cols-2 gap-3"
                 >
-                  Product Name
-                </label>
-                <input
-                  id="product"
-                  type="text"
-                  name="product"
-                  value={itemForm.product}
-                  onChange={(e) =>
-                    setItemForm((p) => ({ ...p, product: e.target.value }))
-                  }
-                  className="px-3 py-2 rounded-lg border border-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400 text-base"
-                  placeholder="Enter product name"
-                  required
-                />
-              </div>
-              <div className="flex flex-col gap-1">
-                <label htmlFor="hsn" className="font-semibold text-blue-700">
-                  HSN
-                </label>
-                <input
-                  id="hsn"
-                  type="text"
-                  name="hsn"
-                  value={itemForm.hsn}
-                  onChange={(e) =>
-                    setItemForm((p) => ({ ...p, hsn: e.target.value }))
-                  }
-                  className="px-3 py-2 rounded-lg border border-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400 text-base"
-                  placeholder="Enter HSN"
-                  required
-                />
-              </div>
-              <div className="flex flex-col gap-1">
-                <label
-                  htmlFor="batchNo"
-                  className="font-semibold text-blue-700"
-                >
-                  Batch No
-                </label>
-                <input
-                  id="batchNo"
-                  type="text"
-                  name="batchNo"
-                  value={itemForm.batchNo}
-                  onChange={(e) =>
-                    setItemForm((p) => ({ ...p, batchNo: e.target.value }))
-                  }
-                  className="px-3 py-2 rounded-lg border border-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400 text-base"
-                  placeholder="Enter batch no"
-                  required
-                />
-              </div>
-              <div className="flex flex-col gap-1">
-                <label
-                  htmlFor="batchExpiry"
-                  className="font-semibold text-blue-700"
-                >
-                  Batch Expiry
-                </label>
-                <input
-                  id="batchExpiry"
-                  type="month"
-                  name="batchExpiry"
-                  value={itemForm.batchExpiry}
-                  onChange={(e) =>
-                    setItemForm((p) => ({ ...p, batchExpiry: e.target.value }))
-                  }
-                  className="px-3 py-2 rounded-lg border border-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400 text-base"
-                  required
-                />
-              </div>
-              <div className="flex flex-col gap-1">
-                <label htmlFor="gst" className="font-semibold text-blue-700">
-                  GST
-                </label>
-                <select
-                  id="gst"
-                  name="gst"
-                  value={itemForm.gst}
-                  onChange={(e) =>
-                    setItemForm((p) => ({ ...p, gst: e.target.value }))
-                  }
-                  className="px-3 py-2 rounded-lg border border-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400 text-base"
-                  required
-                >
-                  {gstOptions.map((opt) => (
-                    <option key={opt} value={opt}>
-                      {opt}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="flex flex-col gap-1">
-                <label
-                  htmlFor="unitPerPack"
-                  className="font-semibold text-blue-700"
-                >
-                  Unit/Pack
-                </label>
-                <input
-                  id="unitPerPack"
-                  type="text"
-                  name="unitPerPack"
-                  value={itemForm.unitPerPack}
-                  onChange={(e) =>
-                    setItemForm((p) => ({ ...p, unitPerPack: e.target.value }))
-                  }
-                  className="px-3 py-2 rounded-lg border border-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400 text-base"
-                  placeholder="e.g. 10 tablets"
-                  required
-                />
-              </div>
-              <div className="flex flex-col gap-1">
-                <label
-                  htmlFor="quantity"
-                  className="font-semibold text-blue-700"
-                >
-                  Purchase Qty
-                </label>
-                <input
-                  id="quantity"
-                  type="number"
-                  name="quantity"
-                  value={itemForm.quantity}
-                  onChange={(e) =>
-                    setItemForm((p) => ({ ...p, quantity: e.target.value }))
-                  }
-                  className="px-3 py-2 rounded-lg border border-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400 text-base"
-                  placeholder="Enter quantity"
-                  min="1"
-                  required
-                />
-              </div>
-              <div className="flex flex-col gap-1">
-                <label htmlFor="free" className="font-semibold text-blue-700">
-                  FREE
-                </label>
-                <input
-                  id="free"
-                  type="number"
-                  name="free"
-                  value={itemForm.free}
-                  onChange={(e) =>
-                    setItemForm((p) => ({ ...p, free: e.target.value }))
-                  }
-                  className="px-3 py-2 rounded-lg border border-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400 text-base"
-                  placeholder="Enter free qty"
-                  min="0"
-                  required
-                />
-              </div>
-              <div className="flex flex-col gap-1">
-                <label htmlFor="rate" className="font-semibold text-blue-700">
-                  Rate
-                </label>
-                <input
-                  id="rate"
-                  type="number"
-                  name="rate"
-                  value={itemForm.rate}
-                  onChange={(e) =>
-                    setItemForm((p) => ({ ...p, rate: e.target.value }))
-                  }
-                  className="px-3 py-2 rounded-lg border border-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400 text-base"
-                  placeholder="Enter rate"
-                  min="0"
-                  step="0.01"
-                  required
-                />
-              </div>
-              <div className="flex flex-col gap-1">
-                <label htmlFor="mrp" className="font-semibold text-blue-700">
-                  MRP
-                </label>
-                <input
-                  id="mrp"
-                  type="number"
-                  name="mrp"
-                  value={itemForm.mrp}
-                  onChange={(e) =>
-                    setItemForm((p) => ({ ...p, mrp: e.target.value }))
-                  }
-                  className="px-3 py-2 rounded-lg border border-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400 text-base"
-                  placeholder="Enter MRP"
-                  min="0"
-                  step="0.01"
-                  required
-                />
-              </div>
+                  <div className="flex flex-col gap-1">
+                    <label
+                      htmlFor="medicine"
+                      className="font-semibold text-blue-700"
+                    >
+                      Product Name
+                    </label>
+                    <input
+                      id="product"
+                      type="text"
+                      name="product"
+                      value={itemForm.product}
+                      onChange={(e) =>
+                        setItemForm((p) => ({ ...p, product: e.target.value }))
+                      }
+                      className="px-3 py-2 rounded-lg border border-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400 text-base"
+                      placeholder="Enter product name"
+                      required
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label
+                      htmlFor="hsn"
+                      className="font-semibold text-blue-700"
+                    >
+                      HSN
+                    </label>
+                    <input
+                      id="hsn"
+                      type="text"
+                      name="hsn"
+                      value={itemForm.hsn}
+                      onChange={(e) =>
+                        setItemForm((p) => ({ ...p, hsn: e.target.value }))
+                      }
+                      className="px-3 py-2 rounded-lg border border-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400 text-base"
+                      placeholder="Enter HSN"
+                      required
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label
+                      htmlFor="batchNo"
+                      className="font-semibold text-blue-700"
+                    >
+                      Batch No
+                    </label>
+                    <input
+                      id="batchNo"
+                      type="text"
+                      name="batchNo"
+                      value={itemForm.batchNo}
+                      onChange={(e) =>
+                        setItemForm((p) => ({ ...p, batchNo: e.target.value }))
+                      }
+                      className="px-3 py-2 rounded-lg border border-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400 text-base"
+                      placeholder="Enter batch no"
+                      required
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label
+                      htmlFor="batchExpiry"
+                      className="font-semibold text-blue-700"
+                    >
+                      Batch Expiry
+                    </label>
+                    <input
+                      id="batchExpiry"
+                      type="month"
+                      name="batchExpiry"
+                      value={itemForm.batchExpiry}
+                      onChange={(e) =>
+                        setItemForm((p) => ({
+                          ...p,
+                          batchExpiry: e.target.value,
+                        }))
+                      }
+                      className="px-3 py-2 rounded-lg border border-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400 text-base"
+                      required
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label
+                      htmlFor="gst"
+                      className="font-semibold text-blue-700"
+                    >
+                      GST
+                    </label>
+                    <select
+                      id="gst"
+                      name="gst"
+                      value={itemForm.gst}
+                      onChange={(e) =>
+                        setItemForm((p) => ({ ...p, gst: e.target.value }))
+                      }
+                      className="px-3 py-2 rounded-lg border border-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400 text-base"
+                      required
+                    >
+                      {gstOptions.map((opt) => (
+                        <option key={opt} value={opt}>
+                          {opt}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label
+                      htmlFor="unitPerPack"
+                      className="font-semibold text-blue-700"
+                    >
+                      Unit/Pack
+                    </label>
+                    <input
+                      id="unitPerPack"
+                      type="text"
+                      name="unitPerPack"
+                      value={itemForm.unitPerPack}
+                      onChange={(e) =>
+                        setItemForm((p) => ({
+                          ...p,
+                          unitPerPack: e.target.value,
+                        }))
+                      }
+                      className="px-3 py-2 rounded-lg border border-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400 text-base"
+                      placeholder="e.g. 10 tablets"
+                      required
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label
+                      htmlFor="quantity"
+                      className="font-semibold text-blue-700"
+                    >
+                      Purchase Qty
+                    </label>
+                    <input
+                      id="quantity"
+                      type="number"
+                      name="quantity"
+                      value={itemForm.quantity}
+                      onChange={(e) =>
+                        setItemForm((p) => ({ ...p, quantity: e.target.value }))
+                      }
+                      className="px-3 py-2 rounded-lg border border-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400 text-base"
+                      placeholder="Enter quantity"
+                      min="1"
+                      required
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label
+                      htmlFor="free"
+                      className="font-semibold text-blue-700"
+                    >
+                      FREE
+                    </label>
+                    <input
+                      id="free"
+                      type="number"
+                      name="free"
+                      value={itemForm.free}
+                      onChange={(e) =>
+                        setItemForm((p) => ({ ...p, free: e.target.value }))
+                      }
+                      className="px-3 py-2 rounded-lg border border-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400 text-base"
+                      placeholder="Enter free qty"
+                      min="0"
+                      required
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label
+                      htmlFor="rate"
+                      className="font-semibold text-blue-700"
+                    >
+                      Rate
+                    </label>
+                    <input
+                      id="rate"
+                      type="number"
+                      name="rate"
+                      value={itemForm.rate}
+                      onChange={(e) =>
+                        setItemForm((p) => ({ ...p, rate: e.target.value }))
+                      }
+                      className="px-3 py-2 rounded-lg border border-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400 text-base"
+                      placeholder="Enter rate"
+                      min="0"
+                      step="0.01"
+                      required
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label
+                      htmlFor="mrp"
+                      className="font-semibold text-blue-700"
+                    >
+                      MRP
+                    </label>
+                    <input
+                      id="mrp"
+                      type="number"
+                      name="mrp"
+                      value={itemForm.mrp}
+                      onChange={(e) =>
+                        setItemForm((p) => ({ ...p, mrp: e.target.value }))
+                      }
+                      className="px-3 py-2 rounded-lg border border-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400 text-base"
+                      placeholder="Enter MRP"
+                      min="0"
+                      step="0.01"
+                      required
+                    />
+                  </div>
                   <button
                     type="submit"
                     className="col-span-full md:col-span-2 bg-gradient-to-r from-indigo-600 to-indigo-400 text-white px-5 py-2 rounded-lg font-semibold shadow hover:from-indigo-700 hover:to-indigo-500 transition text-base mt-1"
@@ -659,18 +755,32 @@ console.log(backendUrl)
               {/* Right: Added items panel */}
               <div className="w-full md:w-80 bg-gray-50 rounded-lg p-3 border border-gray-100 flex flex-col overflow-hidden">
                 <div className="flex items-center justify-between mb-2">
-                  <h4 className="font-semibold text-gray-700">Added Medicines</h4>
-                  <span className="text-xs text-gray-500">{currentItems.length}</span>
+                  <h4 className="font-semibold text-gray-700">
+                    Added Medicines
+                  </h4>
+                  <span className="text-xs text-gray-500">
+                    {currentItems.length}
+                  </span>
                 </div>
                 <div className="flex-1 overflow-y-auto space-y-2 pr-1">
                   {currentItems.length === 0 ? (
-                    <div className="text-sm text-gray-400">No medicines added yet.</div>
+                    <div className="text-sm text-gray-400">
+                      No medicines added yet.
+                    </div>
                   ) : (
                     currentItems.map((item, idx) => (
-                      <div key={idx} className="bg-white rounded shadow-sm p-3 flex items-start gap-3">
+                      <div
+                        key={idx}
+                        className="bg-white rounded shadow-sm p-3 flex items-start gap-3"
+                      >
                         <div className="flex-1 min-w-0">
-                          <div className="font-semibold text-sm truncate">{item.product || item.medicine}</div>
-                          <div className="text-xs text-gray-500 truncate">Batch: {item.batchNo} • Qty: {item.quantity} • MRP: ₹{item.mrp}</div>
+                          <div className="font-semibold text-sm truncate">
+                            {item.product || item.medicine}
+                          </div>
+                          <div className="text-xs text-gray-500 truncate">
+                            Batch: {item.batchNo} • Qty: {item.quantity} • MRP:
+                            ₹{item.mrp}
+                          </div>
                         </div>
                         <div className="flex flex-col gap-2 ml-2">
                           <button
@@ -683,7 +793,11 @@ console.log(backendUrl)
                           <button
                             type="button"
                             className="text-xs px-2 py-1 bg-red-50 text-red-700 rounded hover:bg-red-100"
-                            onClick={() => setCurrentItems((prev) => prev.filter((_, i) => i !== idx))}
+                            onClick={() =>
+                              setCurrentItems((prev) =>
+                                prev.filter((_, i) => i !== idx),
+                              )
+                            }
                           >
                             Remove
                           </button>
@@ -746,10 +860,15 @@ console.log(backendUrl)
               currentInvoices.map((invoice) => {
                 const items = invoice.items || invoice.medicines || [];
                 return (
-                  <tr key={invoice.id} className="border-b last:border-none hover:bg-blue-50 transition">
+                  <tr
+                    key={invoice.id}
+                    className="border-b last:border-none hover:bg-blue-50 transition"
+                  >
                     <td className="py-2 px-3">{invoice.invoiceNumber}</td>
                     <td className="py-2 px-3">{invoice.invoiceDate}</td>
-                    <td className="py-2 px-3">{invoice.distributor || "-"}</td>
+                    <td className="py-2 px-3">
+                      {invoice.distributor?.name || "-"}
+                    </td>
                     <td className="py-2 px-3 text-right">{items.length}</td>
                     <td className="py-2 px-3 text-center">
                       <button
@@ -758,7 +877,7 @@ console.log(backendUrl)
                       >
                         View Details
                       </button>
-                      
+
                       <button
                         className="bg-red-400 text-white px-2 ml-2 py-1 rounded cursor-pointer"
                         onClick={() => handleDeleteInvoice(invoice._id)}
@@ -778,7 +897,9 @@ console.log(backendUrl)
       {totalPages > 1 && (
         <div className="flex items-center justify-between mt-4">
           <div className="text-sm text-gray-600">
-            Showing {(currentPage - 1) * perPage + 1} - {Math.min(currentPage * perPage, filtered.length)} of {filtered.length}
+            Showing {(currentPage - 1) * perPage + 1} -{" "}
+            {Math.min(currentPage * perPage, filtered.length)} of{" "}
+            {filtered.length}
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -792,7 +913,7 @@ console.log(backendUrl)
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
               <button
                 key={p}
-                className={`px-3 py-1 rounded ${p === currentPage ? 'bg-blue-600 text-white' : 'bg-gray-100 hover:bg-gray-200'}`}
+                className={`px-3 py-1 rounded ${p === currentPage ? "bg-blue-600 text-white" : "bg-gray-100 hover:bg-gray-200"}`}
                 onClick={() => setCurrentPage(p)}
               >
                 {p}
@@ -827,7 +948,10 @@ console.log(backendUrl)
             <div className="mb-2 text-sm text-gray-700 grid grid-cols-1 md:grid-cols-3 gap-2">
               <div>
                 <span className="font-semibold">Distributor:</span>{" "}
-                {viewInvoice.distributor || "-"}
+                {viewInvoice.distributor &&
+                typeof viewInvoice.distributor === "object"
+                  ? viewInvoice.distributor.name || "-"
+                  : viewInvoice.distributor || "-"}
               </div>
               <div>
                 <span className="font-semibold">Invoice No:</span>{" "}
@@ -860,7 +984,9 @@ console.log(backendUrl)
                   <tbody>
                     {viewInvoice.items.map((item, idx) => (
                       <tr key={idx} className="border-b last:border-none">
-                          <td className="py-1 px-2">{item.product || item.medicine}</td>
+                        <td className="py-1 px-2">
+                          {item.product || item.medicine}
+                        </td>
                         <td className="py-1 px-2">{item.hsn}</td>
                         <td className="py-1 px-2">{item.batchNo}</td>
                         <td className="py-1 px-2">{item.batchExpiry}</td>
@@ -873,13 +999,24 @@ console.log(backendUrl)
                         <td className="py-1 px-2 text-center flex gap-1 justify-center">
                           <button
                             className="bg-yellow-100 text-yellow-700 px-2 py-1 rounded text-xs font-semibold hover:bg-yellow-200"
-                            onClick={() => handleEditMedicine(item, viewInvoice._id || viewInvoice.id, idx)}
+                            onClick={() =>
+                              handleEditMedicine(
+                                item,
+                                viewInvoice._id || viewInvoice.id,
+                                idx,
+                              )
+                            }
                           >
                             Edit
                           </button>
                           <button
                             className="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-semibold hover:bg-red-200"
-                            onClick={() => handleShowDeleteConfirm(viewInvoice._id || viewInvoice.id, item._id || item.id || idx)}
+                            onClick={() =>
+                              handleShowDeleteConfirm(
+                                viewInvoice._id || viewInvoice.id,
+                                item._id || item.id || idx,
+                              )
+                            }
                           >
                             Delete
                           </button>
@@ -912,7 +1049,11 @@ console.log(backendUrl)
               <button
                 className="px-6 py-2 rounded-lg bg-gray-100 text-gray-700 font-semibold hover:bg-gray-200 transition"
                 onClick={() =>
-                  setDeleteConfirm({ show: false, invoiceId: null, itemId: null })
+                  setDeleteConfirm({
+                    show: false,
+                    invoiceId: null,
+                    itemId: null,
+                  })
                 }
               >
                 Cancel

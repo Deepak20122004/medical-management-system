@@ -18,7 +18,7 @@ const allowedOrigins = [
 ];
 
 app.use(express.json());
-app.use(cookieParser());
+
 app.use(
   cors({
     origin: allowedOrigins,
@@ -27,7 +27,7 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization"],
   }),
 );
-
+app.use(cookieParser());
 // API endpoints
 
 app.use("/api/auth", authRouter);

@@ -2,6 +2,8 @@ import jwt from "jsonwebtoken";
 
 const userAuth = async (req, res, next) => {
   const { token } = req.cookies;
+  console.log("Cookies:", req.cookies);
+
   // console.log("Token from cookie:", token); // Debugging log
 
   if (!token) {
@@ -13,8 +15,8 @@ const userAuth = async (req, res, next) => {
   try {
     const tokenDecoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
     if (tokenDecoded.id) {
-     
-    req.userId = tokenDecoded.id;
+      req.userId = tokenDecoded.id;
+      // req.user = { id: decoded.id };
     } else {
       return res
         .status(401)

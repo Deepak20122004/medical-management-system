@@ -3,6 +3,7 @@ import {
   addStock,
   getAllStock,
   getStockByInvoiceNumber,
+  getStockByDistributor,
   updateInvoice,
   deleteInvoice,
   updateMedicine,
@@ -15,6 +16,8 @@ const router = express.Router();
 router.post("/add", addStock);
 router.get("/", getAllStock);
 router.get("/invoice/:invoiceNumber", getStockByInvoiceNumber);
+// invoices for a distributor
+router.get("/distributor/:distributorId", getStockByDistributor);
 router.put("/:invoiceId", updateInvoice);
 router.delete("/:invoiceId", deleteInvoice);
 

@@ -40,20 +40,40 @@ export const addStock = async (req, res) => {
 
 
 /* ================= GET ALL INVOICES ================= */
+// export const getAllStock = async (req, res) => {
+//   try {
+//     const data = await Stock.find().sort({ createdAt: -1 });
+
+//     res.json({
+//       success: true,
+//       totalInvoices: data.length,
+//       data
+//     });
+
+    
+
+//   } catch {
+//     res.status(500).json({ success: false });
+//   }
+// };
+
 export const getAllStock = async (req, res) => {
   try {
-    const data = await Stock.find().sort({ createdAt: -1 });
+    const data = await Stock.find()
+      .populate("distributor", "name phone")
+      .sort({ createdAt: -1 });
 
     res.json({
       success: true,
-      totalInvoices: data.length,
-      data
+      data,
     });
-
-  } catch {
+  } catch (error) {
     res.status(500).json({ success: false });
   }
 };
+
+
+/*============*/
 
 
 /* ================= GET BY INVOICE NUMBER ================= */
@@ -80,7 +100,6 @@ export const getStockByInvoiceNumber = async (req, res) => {
     res.status(500).json({ success: false });
   }
 };
-/* ================= UPDATE INVOICE ================= */
 
 /* ================= UPDATE INVOICE ================= */
 export const updateInvoice = async (req, res) => {
@@ -113,7 +132,6 @@ export const updateInvoice = async (req, res) => {
   }
 };
 
-/* ================= DELETE INVOICE ================= */
 /* ================= DELETE INVOICE ================= */
 export const deleteInvoice = async (req, res) => {
   try {
@@ -203,5 +221,17 @@ export const deleteMedicine = async (req, res) => {
 
   } catch {
     res.status(500).json({ success: false });
+  }
+};
+
+/* ================= GET BY DISTRIBUTOR ================= */
+export const getStockByDistributor = async (req, res) => {
+  try {
+    const { distributorId } = req.params;
+    const invoices = await Stock.find({ distributor: distributorId }).sort({ createdAt: -1 });
+    return res.json({ success: true, invoices });
+  } catch (error) {
+    console.error("Error in getStockByDistributor:", error);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };
