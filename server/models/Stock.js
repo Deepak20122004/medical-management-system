@@ -54,6 +54,11 @@ const medicineSchema = new mongoose.Schema(
 
 const stockSchema = new mongoose.Schema(
   {
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
     distributor: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Distributor",
@@ -74,6 +79,7 @@ const stockSchema = new mongoose.Schema(
   },
   { timestamps: true },
 );
+stockSchema.index({ user: 1, invoiceNumber: 1 }, { unique: true });
 
 const Stock = mongoose.model("Stock", stockSchema);
 

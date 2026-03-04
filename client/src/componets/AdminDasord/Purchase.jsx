@@ -18,17 +18,20 @@ const Distributor = () => {
     licence: "",
   });
 
-  /* ================= HISTORY STATE ================= */
   const [historyOpen, setHistoryOpen] = useState(false);
   const [historyInvoices, setHistoryInvoices] = useState([]);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
 
   /* ================= FETCH DISTRIBUTORS ================= */
+
   const fetchData = async () => {
     try {
-      const res = await axios.get(`${backendUrl}/api/distributor`);
+      const res = await axios.get(`${backendUrl}/api/distributor`, {
+        withCredentials: true,
+      });
+
       setData(res.data.data);
-    } catch {
+    } catch (error) {
       toast.error("Failed to load distributors");
     }
   };
@@ -38,21 +41,22 @@ const Distributor = () => {
   }, []);
 
   /* ================= ADD / UPDATE ================= */
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
       if (editingId) {
-        await axios.put(
-          `${backendUrl}/api/distributor/${editingId}`,
-          form
-        );
+        await axios.put(`${backendUrl}/api/distributor/${editingId}`, form, {
+          withCredentials: true,
+        });
+
         toast.success("Distributor Updated");
       } else {
-        await axios.post(
-          `${backendUrl}/api/distributor/add`,
-          form
-        );
+        await axios.post(`${backendUrl}/api/distributor/add`, form, {
+          withCredentials: true,
+        });
+
         toast.success("Distributor Added");
       }
 
@@ -65,53 +69,69 @@ const Distributor = () => {
       });
 
       setEditingId(null);
+
       fetchData();
-    } catch {
-      toast.error("Something went wrong");
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Something went wrong");
     }
   };
 
   /* ================= EDIT ================= */
- const handleEdit = (item) => {
-  setForm({
-    gstin: item.gstin || "",
-    district: item.district || "",
-    name: item.name || "",
-    mobile: item.mobile || "",
-    licence: item.licence || "",
-  });
 
-  setEditingId(item._id);
-};
+  const handleEdit = (item) => {
+    setForm({
+      gstin: item.gstin || "",
+      district: item.district || "",
+      name: item.name || "",
+      mobile: item.mobile || "",
+      licence: item.licence || "",
+    });
+
+    setEditingId(item._id);
+  };
 
   /* ================= DELETE ================= */
+
   const confirmDelete = async () => {
     try {
-      await axios.delete(
-        `${backendUrl}/api/distributor/${deleteId}`
-      );
+      await axios.delete(`${backendUrl}/api/distributor/${deleteId}`, {
+        withCredentials: true,
+      });
+
       toast.success("Distributor Deleted");
+
       setDeleteId(null);
+
       fetchData();
-    } catch {
+    } catch (error) {
       toast.error("Delete Failed");
     }
   };
 
   /* ================= HISTORY ================= */
-  const handleOpenHistory = async (distributorId) => {
-    try {
-      const res = await axios.get(
-        `${backendUrl}/api/stock/distributor/${distributorId}`
-      );
 
-      setHistoryInvoices(res.data.invoices);
-      setSelectedInvoice(null);
-      setHistoryOpen(true);
-    } catch {
-      toast.error("Failed to load invoice history");
-    }
-  };
+ const handleOpenHistory = async (distributorId) => {
+  try {
+
+    const res = await axios.get(
+      `${backendUrl}/api/stock/distributor/${distributorId}`,
+      { withCredentials: true }
+    );
+
+    setHistoryInvoices(res.data.invoices);
+
+    setSelectedInvoice(null);
+
+    setHistoryOpen(true);
+
+  } catch (error) {
+
+    console.log(error);
+
+    toast.error("Failed to load invoice history");
+
+  }
+};;
 
   return (
     <div className="min-h-screen bg-gradient-to-r from-blue-100 to-purple-200 p-8">
@@ -121,6 +141,7 @@ const Distributor = () => {
         </h2>
 
         {/* ================= FORM ================= */}
+
         <form
           onSubmit={handleSubmit}
           className="grid md:grid-cols-2 gap-4 mb-8"
@@ -131,9 +152,7 @@ const Distributor = () => {
               type="text"
               placeholder={key.toUpperCase()}
               value={form[key]}
-              onChange={(e) =>
-                setForm({ ...form, [key]: e.target.value })
-              }
+              onChange={(e) => setForm({ ...form, [key]: e.target.value })}
               className="border p-3 rounded-lg focus:ring-2 focus:ring-blue-400"
               required
             />
@@ -145,6 +164,7 @@ const Distributor = () => {
         </form>
 
         {/* ================= TABLE ================= */}
+
         <table className="w-full text-sm bg-white shadow rounded-lg overflow-hidden">
           <thead className="bg-blue-100 text-blue-700">
             <tr>
@@ -156,6 +176,7 @@ const Distributor = () => {
               <th className="p-3 text-center">Actions</th>
             </tr>
           </thead>
+
           <tbody>
             {data.map((d) => (
               <tr key={d._id} className="border-b hover:bg-blue-50">
@@ -164,6 +185,7 @@ const Distributor = () => {
                 <td className="p-3 font-medium">{d.name}</td>
                 <td className="p-3">{d.mobile}</td>
                 <td className="p-3">{d.licence}</td>
+
                 <td className="p-3 text-center space-x-2">
                   <button
                     onClick={() => handleEdit(d)}
@@ -192,6 +214,7 @@ const Distributor = () => {
         </table>
 
         {/* ================= HISTORY MODAL ================= */}
+
         {historyOpen && (
           <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
             <div className="bg-white p-6 rounded-xl w-[600px] shadow-xl">
@@ -203,12 +226,14 @@ const Distributor = () => {
                 className="w-full border p-2 mb-4"
                 onChange={(e) => {
                   const inv = historyInvoices.find(
-                    (i) => i._id === e.target.value
+                    (i) => i._id === e.target.value,
                   );
+
                   setSelectedInvoice(inv);
                 }}
               >
                 <option>Select Invoice</option>
+
                 {historyInvoices.map((inv) => (
                   <option key={inv._id} value={inv._id}>
                     {inv.invoiceNumber}
@@ -219,8 +244,7 @@ const Distributor = () => {
               {selectedInvoice && (
                 <>
                   <p>
-                    <strong>Date:</strong>{" "}
-                    {selectedInvoice.invoiceDate}
+                    <strong>Date:</strong> {selectedInvoice.invoiceDate}
                   </p>
 
                   <table className="w-full mt-4 border text-sm">
@@ -231,6 +255,7 @@ const Distributor = () => {
                         <th className="p-2">MRP</th>
                       </tr>
                     </thead>
+
                     <tbody>
                       {selectedInvoice.medicines.map((m) => (
                         <tr key={m._id} className="border-b">
@@ -255,12 +280,14 @@ const Distributor = () => {
         )}
 
         {/* ================= DELETE MODAL ================= */}
+
         {deleteId && (
           <div className="fixed inset-0 bg-black/40 flex justify-center items-center">
             <div className="bg-white p-6 rounded-xl shadow-xl">
               <p className="mb-4 text-center">
                 Are you sure you want to delete?
               </p>
+
               <div className="flex justify-center gap-4">
                 <button
                   onClick={() => setDeleteId(null)}
@@ -268,6 +295,7 @@ const Distributor = () => {
                 >
                   Cancel
                 </button>
+
                 <button
                   onClick={confirmDelete}
                   className="bg-red-600 text-white px-4 py-2 rounded"
