@@ -15,7 +15,7 @@ connectDB();
 
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://medical-management-system-v1zh.onrender.com",
+  "https://medical-management-system-1w2d.onrender.com"
 ];
 
 app.use(express.json());
