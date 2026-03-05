@@ -7,14 +7,13 @@ import axios from "axios";
 const navOptions = [
   { to: "purchase", label: "Purchase" },
   { to: "stock", label: "Stock" },
-  { to: "sale", label: "Sale" },
+  { to: "patient", label: "Sale" },
+  { to: "invoice", label: "Invoice" },
 ];
 
 const AdminHome = () => {
   const [open, setOpen] = useState(false);
   const { userData, backendUrl, setUserData } = useContext(AppContext);
-
-  
 
   const [profilePic, setProfilePic] = useState(null);
 
@@ -59,7 +58,7 @@ const AdminHome = () => {
         {
           withCredentials: true,
           headers: { "Content-Type": "multipart/form-data" },
-        }
+        },
       );
 
       if (res.data.success) {
@@ -87,13 +86,10 @@ const AdminHome = () => {
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-gradient-to-br from-blue-100 via-blue-200 to-blue-50 relative">
-
       {/* Sidebar */}
       <aside className="w-72 bg-white shadow-xl flex flex-col">
-
         {/* Profile Section */}
         <div className="flex flex-col items-center gap-3 p-6 border-b bg-gradient-to-b from-blue-50 to-white">
-          
           <label className="relative cursor-pointer group">
             <img
               src={

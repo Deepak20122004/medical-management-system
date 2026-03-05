@@ -13,6 +13,7 @@ import Distributor from "./componets/AdminDasord/Purchase";
 import Stock from "./componets/AdminDasord/Stock";
 import  Sale from "./componets/AdminDasord/Sale"
 import AdminDash from "./componets/AdminDasord/AdminDash"
+import Patient from "./componets/AdminDasord/Patient";
 
 
 
@@ -55,7 +56,8 @@ const App = () => {
             <Route path="" element={<AdminDash/>} />
             <Route path="/adminhome/purchase" element={<Distributor />} />
             <Route path="/adminhome/stock" element={<Stock />} />
-            <Route path="/adminhome/sale" element={<Sale />} />
+            <Route path="/adminhome/invoice" element={<Sale />} />
+            <Route path="/adminhome/patient" element={<Patient />} />
           </Route>
         </Route>
       </Routes>
