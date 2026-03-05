@@ -8,7 +8,7 @@ axios.defaults.withCredentials = true;
 
 export const AppContextProvider = ({ children }) => {
   // const backendUrl = "https://medical-management-system-bakend.onrender.com"
-      const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:4  000";
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userData, setUserData] = useState(false)
 

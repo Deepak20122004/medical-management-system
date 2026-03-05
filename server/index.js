@@ -7,7 +7,7 @@ import authRouter from "./routes/authRoutes.js";
 import userRouter from "./routes/usreRoutes.js";
 import distributorRoutes from "./routes/distributorRoutes.js";
 import stockRoutes from "./routes/stockRoutes.js";
-import saleRoutes from "./routes/saleRoutes.js"
+import saleRoutes from "./routes/saleRoutes.js";
 
 const app = express();
 const port = process.env.PORT || 4000;
@@ -24,8 +24,10 @@ app.use(
   cors({
     origin: allowedOrigins,
     credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    // methods: ["GET", "POST", "PUT", "DELETE"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    // allowedHeaders: ["Content-Type", "Authorization"],
+    allowedHeaders: ["Content-Type", "Authorization", "token"],
   }),
 );
 app.use(cookieParser());
@@ -35,7 +37,7 @@ app.use("/api/auth", authRouter);
 app.use("/api/user", userRouter);
 app.use("/api/distributor", distributorRoutes);
 app.use("/api/stock", stockRoutes);
-app.use("/api/sale",saleRoutes)
+app.use("/api/sale", saleRoutes);
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
