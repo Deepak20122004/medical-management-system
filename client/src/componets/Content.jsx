@@ -30,7 +30,7 @@ const Content = () => {
           toast.error(data.message);
         }
       } catch (error) {
-       toast.error("chutiye pehle Login kar le ")
+       toast.error("Login to access all features")
       }
     } else {
       navigate("/login");
