@@ -8,9 +8,9 @@ axios.defaults.withCredentials = true;
 
 export const AppContextProvider = ({ children }) => {
   // const backendUrl = "https://medical-management-system-bakend.onrender.com"
-      const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:4  000";
+  const backendUrl = import.meta.env.VITE_BACKEND_URL;
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userData, setUserData] = useState(false)
+  const [userData, setUserData] = useState(false);
 
   const getAuthState = async () => {
     try {
@@ -20,7 +20,7 @@ export const AppContextProvider = ({ children }) => {
         getUserData();
       }
     } catch (error) {
-      toast("login to access the features" );
+      toast("login to access the features");
     }
   };
 
