@@ -50,7 +50,6 @@ const Sale = () => {
   };
 
   /* ================= SEARCH MEDICINE ================= */
-
   const searchMedicine = async (name) => {
     try {
       const res = await axios.get(
@@ -58,7 +57,20 @@ const Sale = () => {
         { withCredentials: true },
       );
 
-      setMedicinesStock(res.data.data || []);
+      const stocks = res.data.data || [];
+
+      const medicines = stocks.flatMap((stock) =>
+        stock.medicines.map((m) => ({
+          _id: stock._id + m._id,
+          product: m.product,
+          batchNo: m.batchNo,
+          batchExpiry: m.batchExpiry,
+          mrp: m.mrp,
+          quantity: m.quantity,
+        })),
+      );
+
+      setMedicinesStock(medicines);
     } catch (err) {
       console.log(err);
     }
@@ -332,22 +344,24 @@ const Sale = () => {
               }}
               className="border p-2 w-full"
             />
-
             {medicinesStock.length > 0 && (
               <select
                 className="border p-2 w-full"
                 onChange={(e) => {
                   const m = medicinesStock.find(
-                    (x) => x.product === e.target.value,
+                    (x) => x._id === e.target.value,
                   );
 
-                  selectMedicine(m);
+                  if (m) selectMedicine(m);
                 }}
               >
                 <option>Select Medicine</option>
 
                 {medicinesStock.map((m) => (
-                  <option key={m._id}>{m.product}</option>
+                  <option key={m._id} value={m._id}>
+                    {m.product} | Batch: {m.batchNo} | Exp: {m.batchExpiry} |
+                    MRP ₹{m.mrp}
+                  </option>
                 ))}
               </select>
             )}
