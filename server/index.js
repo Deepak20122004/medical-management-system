@@ -8,6 +8,7 @@ import userRouter from "./routes/usreRoutes.js";
 import distributorRoutes from "./routes/distributorRoutes.js";
 import stockRoutes from "./routes/stockRoutes.js";
 import saleRoutes from "./routes/saleRoutes.js";
+import dashboardRoutes from "./routes/dashBoardRoutes.js";
 
 const app = express();
 const port = process.env.PORT || 4000;
@@ -15,7 +16,7 @@ connectDB();
 
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://medical-management-system-1w2d.onrender.com"
+  "https://medical-management-system-1w2d.onrender.com",
 ];
 
 app.use(express.json());
@@ -38,6 +39,7 @@ app.use("/api/user", userRouter);
 app.use("/api/distributor", distributorRoutes);
 app.use("/api/stock", stockRoutes);
 app.use("/api/sale", saleRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
