@@ -1,5 +1,8 @@
 import mongoose from "mongoose";
 
+// Stock model: purchase invoices and inventory items
+// - `medicineSchema` holds details about each purchased medicine/batch
+// - `stockSchema` links invoices to a distributor, user and contains medicines array
 const medicineSchema = new mongoose.Schema(
   {
     product: {

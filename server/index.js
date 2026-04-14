@@ -32,10 +32,11 @@ app.use(
   }),
 );
 app.use(cookieParser());
+
 // API endpoints
 
 app.use("/api/auth", authRouter);
-app.use("/api/user", userRouter);
+app.use("/api/user", userRouter); 
 app.use("/api/distributor", distributorRoutes);
 app.use("/api/stock", stockRoutes);
 app.use("/api/sale", saleRoutes);

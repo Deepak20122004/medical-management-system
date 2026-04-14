@@ -4,6 +4,9 @@ import userModel from "../models/userModel.js";
 import transporter from "../config/nodemailer.js";
 import { EMAIL_VERIFY_TEMPLATE, PASSWORD_RESET_TEMPLATE } from "../config/EmailTemplates.js";
 
+// register: creates a new user account with email, name and hashed password
+// - validates input, checks for duplicate email, hashes password with bcrypt
+// - generates JWT token for session, sends welcome email and sets auth cookie
 export const register = async (req, res) => {
   const { name, email, password } = req.body;
   if (!name || !email || !password) {
@@ -49,11 +52,14 @@ export const register = async (req, res) => {
       .status(201)
       .json({ success: true, message: "User registered successfully" });
   } catch (error) {
-    console.error("Error in register controller:", error);
+    // console.error("Error in register controller:", error);
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
+// login: authenticates user with email and password
+// - finds user, compares password hash, verifies account is approved
+// - generates JWT token, sets auth cookie and returns success
 export const login = async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
@@ -73,7 +79,7 @@ export const login = async (req, res) => {
     if (!isMatch) {
       return res
         .status(400)
-        .json({ success: false, message: "Invalid email or password" });
+        .json({ success: false, message: "Invalid  password" });
     }
     const userData = await userModel.findById(user._id);
     if (!userData.isAccountVerified) {
@@ -100,6 +106,7 @@ export const login = async (req, res) => {
   }
 };
 
+// logout: clears authentication token cookie to end user session
 export const logout = async (req, res) => {
   try {
     res.clearCookie("token", {
@@ -111,12 +118,14 @@ export const logout = async (req, res) => {
       .status(200)
       .json({ success: true, message: "Logout successful" });
   } catch (error) {
-    console.error("Error in logout controller:", error);
+    // console.error("Error in logout controller:", error);
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
-// send verification otp to user email for account verification
+// sendVerifyOtp: generates and emails a 6-digit OTP to verify user account
+// - retrieves user from JWT token, creates OTP valid for 10 minutes
+// - sends email with formatted HTML template containing the OTP
 export const sendVerifyOtp = async (req, res) => {
   try {
     // const { userId } = req.body;
@@ -156,8 +165,10 @@ export const sendVerifyOtp = async (req, res) => {
   }
 };
 
+// verifyEmail: validates OTP and marks user account as verified
+// - checks OTP matches, hasn't expired, then sets isAccountVerified flag
 export const verifyEmail = async (req, res) => {
-  console.log("verifyEmail controller called with body:", req.body); // Debugging log
+  // console.log("verifyEmail controller called with body:", req.body); 
   const { otp } = req.body;
   const userId = req.userId;
   if (!userId || !otp) {
@@ -198,7 +209,8 @@ export const verifyEmail = async (req, res) => {
   }
 };
 
-// check  if user is authenticated
+// isAuthenticated: checks if user has valid JWT token in request
+// - middleware sets req.userId if token is valid, returns success response
 export const isAuthenticated = async (req, res) => {
   try {
     return res.json({ success: true });
@@ -207,7 +219,8 @@ export const isAuthenticated = async (req, res) => {
   }
 };
 
-// send password reset otp to user email for password reset
+// sendResetPasswordOtp: generates and sends 6-digit OTP for password reset
+// - finds user by email, creates OTP valid for 10 minutes, sends via email
 export const sendResetPasswordOtp = async (req, res) => {
   const { email } = req.body;
 
@@ -247,7 +260,8 @@ export const sendResetPasswordOtp = async (req, res) => {
   }
 };
 
-// resert user password after verifying reset otp
+// resetPassword: resets user password after OTP verification
+// - validates OTP, checks expiry, hashes new password and updates user
 export const resetPassword = async (req, res) => {
   const { email, otp, newPassword } = req.body;
   if (!email || !otp || !newPassword) {

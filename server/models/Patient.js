@@ -1,5 +1,7 @@
 import mongoose from "mongoose";
 
+// Patient model: stores basic patient info for a user
+// - `name` and optional `mobile`; linked to the owning user account
 const patientSchema = new mongoose.Schema(
 {
   user:{

@@ -3,9 +3,11 @@ import Stock from "../models/Stock.js";
 
 /* ================= ADD DISTRIBUTOR ================= */
 
+// addDistributor: creates new distributor record with validation
+// - checks required fields, prevents duplicate license, creates database entry
 export const addDistributor = async (req, res) => {
   try {
-    console.log("USER ID:", req.userId);
+    // console.log("USER ID:", req.userId);
     const { name, mobile, gstin, district, licence } = req.body;
 
     // validation
@@ -18,7 +20,7 @@ export const addDistributor = async (req, res) => {
 
     // check duplicate distributor for same user
     const exist = await Distributor.findOne({
-      name,
+      licence,
       user: req.userId,
     });
 
@@ -44,7 +46,7 @@ export const addDistributor = async (req, res) => {
       distributor,
     });
   } catch (error) {
-    console.log("ADD DISTRIBUTOR ERROR:", error);
+    // console.log("ADD DISTRIBUTOR ERROR:", error);
 
     res.status(500).json({
       success: false,
@@ -55,6 +57,7 @@ export const addDistributor = async (req, res) => {
 
 /* ================= GET ALL DISTRIBUTORS ================= */
 
+// getDistributors: retrieves all distributors for current user sorted by creation date (newest first)
 export const getDistributors = async (req, res) => {
   try {
     const data = await Distributor.find({
@@ -67,7 +70,7 @@ export const getDistributors = async (req, res) => {
       data,
     });
   } catch (error) {
-    console.log("GET DISTRIBUTOR ERROR:", error);
+    // console.log("GET DISTRIBUTOR ERROR:", error);
 
     res.status(500).json({
       success: false,
@@ -78,6 +81,7 @@ export const getDistributors = async (req, res) => {
 
 /* ================= GET DISTRIBUTORS (NAME SORT) ================= */
 
+// getAllDistributors: retrieves all distributors for current user sorted alphabetically by name
 export const getAllDistributors = async (req, res) => {
   try {
     const distributors = await Distributor.find({
@@ -101,13 +105,15 @@ export const getAllDistributors = async (req, res) => {
 
 /* ================= GET INVOICES BY DISTRIBUTOR ================= */
 
+// getInvoicesByDistributor: retrieves all stock/purchase invoices associated with a specific distributor
+// - returns invoices sorted by creation date, includes distributor name populated
 export const getInvoicesByDistributor = async (req, res) => {
   try {
     const { id } = req.params;
 
     const invoices = await Stock.find({
       distributor: id,
-      user: req.userId, // 🔐 security filter
+      user: req.userId, //  security filter
     })
       .sort({ createdAt: -1 })
       .populate("distributor", "name");
@@ -118,8 +124,7 @@ export const getInvoicesByDistributor = async (req, res) => {
       invoices,
     });
   } catch (error) {
-    console.log("GET INVOICE ERROR:", error);
-
+    // console.log("GET INVOICE ERROR:", error);
     res.status(500).json({
       success: false,
       message: "Server error",
@@ -129,12 +134,14 @@ export const getInvoicesByDistributor = async (req, res) => {
 
 /* ================= UPDATE DISTRIBUTOR ================= */
 
+// updateDistributor: updates distributor details for specified distributor ID
+// - security: ensures user can only update their own distributors
 export const updateDistributor = async (req, res) => {
   try {
     const distributor = await Distributor.findOneAndUpdate(
       {
         _id: req.params.id,
-        user: req.userId, // 🔐 user security
+        user: req.userId, // user security
       },
       req.body,
       { new: true },
@@ -153,8 +160,7 @@ export const updateDistributor = async (req, res) => {
       distributor,
     });
   } catch (error) {
-    console.log("UPDATE DISTRIBUTOR ERROR:", error);
-
+    // console.log("UPDATE DISTRIBUTOR ERROR:", error);
     res.status(500).json({
       success: false,
       message: "Server error",
@@ -164,11 +170,13 @@ export const updateDistributor = async (req, res) => {
 
 /* ================= DELETE DISTRIBUTOR ================= */
 
+// deleteDistributor: deletes a distributor record by ID
+// - security: ensures user can only delete their own distributors
 export const deleteDistributor = async (req, res) => {
   try {
     const distributor = await Distributor.findOneAndDelete({
       _id: req.params.id,
-      user: req.userId, // 🔐 user security
+      user: req.userId, 
     });
 
     if (!distributor) {
@@ -183,7 +191,7 @@ export const deleteDistributor = async (req, res) => {
       message: "Deleted successfully",
     });
   } catch (error) {
-    console.log("DELETE DISTRIBUTOR ERROR:", error);
+    // console.log("DELETE DISTRIBUTOR ERROR:", error);
 
     res.status(500).json({
       success: false,

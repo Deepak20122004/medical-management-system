@@ -2,6 +2,9 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 
+// Patients: displays list of patient bills with view and delete functionality
+// - fetches all sale records from backend, supports pagination (6 items per page)
+// - includes bill details modal that shows patient, medicines, and discount info
 const Patients = () => {
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -12,6 +15,8 @@ const Patients = () => {
 
   const token = localStorage.getItem("token");
 
+  // fetchPatients: retrieves all sale bills from backend
+  // - sets loading state, fetches from /api/sale, updates patients list
   const fetchPatients = async () => {
     try {
       setLoading(true);

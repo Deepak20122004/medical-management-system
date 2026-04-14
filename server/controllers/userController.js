@@ -1,6 +1,8 @@
 import userModel from "../models/userModel.js";
 import cloudinary from "../config/cloudinary.js";
 
+// getUserData: retrieves user profile information by userId from JWT token
+// - returns name, email, verification status, and profile picture URL
 export const getUserData = async (req, res) => {
   try {
     // const {userId} = req.body;
@@ -26,9 +28,11 @@ export const getUserData = async (req, res) => {
   }
 };
 
+// uploadProfilePic: uploads user profile picture to Cloudinary and saves URL to database
+// - receives image file, converts to base64, uploads to Cloudinary, stores secure URL in user record
 export const uploadProfilePic = async (req, res) => {
   try {
-    console.log("User ID:", req.userId);
+    // console.log("User ID:", req.userId);
 
     if (!req.file) {
       return res.status(400).json({ message: "No file uploaded" });
@@ -59,7 +63,7 @@ export const uploadProfilePic = async (req, res) => {
     });
 
   } catch (error) {
-    console.log("UPLOAD ERROR:", error);
+    // console.log("UPLOAD ERROR:", error);
     res.status(500).json({ message: "Profile upload failed" });
   }
 };

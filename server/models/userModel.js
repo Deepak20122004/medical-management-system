@@ -1,5 +1,13 @@
 import mongoose from "mongoose";
 
+// User model schema
+// - Stores authentication and profile information for each registered user
+// Fields:
+// - name, email, password: basic account credentials
+// - verifyotp, verifyotpExpiryAt: 6-digit OTP and expiry timestamp for email verification
+// - isAccountVerified: boolean flag indicating whether the email is verified
+// - resetOtp, resetOtpExpiryAt: OTP and expiry timestamp for password reset flow
+// - profilePic: URL to uploaded profile image (Cloudinary or similar)
 const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
@@ -15,6 +23,7 @@ const userSchema = new mongoose.Schema({
   },
 });
 
+// Use existing compiled model if available (prevents OverwriteModelError in watch mode)
 const userModel = mongoose.models.user || mongoose.model("user", userSchema);
 
 export default userModel;

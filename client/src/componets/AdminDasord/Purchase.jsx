@@ -2,20 +2,10 @@ import React, { useEffect, useState, useContext } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { AppContext } from "../../context/AppContext";
-import {
-  Plus,
-  Edit2,
-  Trash2,
-  History as HistoryIcon,
-  MapPin,
-  Phone,
-  X,
-  AlertTriangle,
-  ChevronRight,
-  UserPlus,
-  LayoutDashboard,
-} from "lucide-react";
 
+// Distributor (Purchase): manage distributor records and view invoice history
+// - add / update / delete distributors for the current user
+// - view invoice history for a distributor (calls stock API)
 const Distributor = () => {
   const { backendUrl } = useContext(AppContext);
 
@@ -37,6 +27,7 @@ const Distributor = () => {
 
   /* ================= FETCH DISTRIBUTORS ================= */
 
+  // fetchData: load all distributors for the current user
   const fetchData = async () => {
     try {
       const res = await axios.get(`${backendUrl}/api/distributor`, {
@@ -45,7 +36,7 @@ const Distributor = () => {
 
       setData(res.data.data);
     } catch (error) {
-      toast.error("Failed to load distributors");
+      toast.error(error.message);
     }
   };
 
@@ -55,6 +46,8 @@ const Distributor = () => {
 
   /* ================= ADD / UPDATE ================= */
 
+  // handleSubmit: create a new distributor or update existing one
+  // - if `editingId` is set, sends PUT to update, otherwise POST to add
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -69,7 +62,6 @@ const Distributor = () => {
         await axios.post(`${backendUrl}/api/distributor/add`, form, {
           withCredentials: true,
         });
-
         toast.success("Distributor Added");
       }
 
@@ -80,9 +72,7 @@ const Distributor = () => {
         mobile: "",
         licence: "",
       });
-
       setEditingId(null);
-
       fetchData();
     } catch (error) {
       toast.error(error.response?.data?.message || "Something went wrong");
@@ -91,6 +81,7 @@ const Distributor = () => {
 
   /* ================= EDIT ================= */
 
+  // handleEdit: populate the form with selected distributor for editing
   const handleEdit = (item) => {
     setForm({
       gstin: item.gstin || "",
@@ -99,30 +90,28 @@ const Distributor = () => {
       mobile: item.mobile || "",
       licence: item.licence || "",
     });
-
     setEditingId(item._id);
   };
 
   /* ================= DELETE ================= */
 
+  // confirmDelete: delete distributor with id `deleteId` via API
   const confirmDelete = async () => {
     try {
       await axios.delete(`${backendUrl}/api/distributor/${deleteId}`, {
         withCredentials: true,
       });
-
       toast.success("Distributor Deleted");
-
       setDeleteId(null);
-
       fetchData();
     } catch (error) {
-      toast.error("Delete Failed");
+      toast.error(error.message);
     }
   };
 
   /* ================= HISTORY ================= */
 
+  // handleOpenHistory: fetch invoice history for a distributor and open modal
   const handleOpenHistory = async (distributorId) => {
     try {
       const res = await axios.get(
@@ -131,13 +120,10 @@ const Distributor = () => {
       );
 
       setHistoryInvoices(res.data.invoices);
-
       setSelectedInvoice(null);
-
       setHistoryOpen(true);
     } catch (error) {
-      console.log(error);
-
+      // console.log(error);
       toast.error("Failed to load invoice history");
     }
   };
@@ -206,7 +192,16 @@ const Distributor = () => {
                       </button>
 
                       <button
-                        onClick={() => setDeleteId(d._id)}
+                        onClick={() => {
+                          if (
+                            window.confirm(
+                              "Are you sure to delete this distributor?",
+                            )
+                          ) {
+                            setDeleteId(d._id);
+                            confirmDelete(d._id);
+                          }
+                        }}
                         className="bg-red-500 px-3 py-1 rounded text-white text-sm"
                       >
                         Delete

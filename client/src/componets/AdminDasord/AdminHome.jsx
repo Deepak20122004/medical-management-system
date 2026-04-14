@@ -11,12 +11,16 @@ const navOptions = [
   { to: "invoice", label: "Invoice" },
 ];
 
+// AdminHome: main admin dashboard layout with sidebar navigation
+// - shows user profile with upload functionality, desktop/mobile responsive navigation
 const AdminHome = () => {
   const [open, setOpen] = useState(false);
   const { userData, backendUrl, setUserData } = useContext(AppContext);
   const [profilePic, setProfilePic] = useState(null);
 
   /* ================= FETCH USER DATA ON LOAD ================= */
+  // fetchUser: retrieves current user data and profile picture from backend
+  // - updates userData context and profilePic state on success
   const fetchUser = async () => {
     try {
       const res = await axios.get(`${backendUrl}/api/user/data`, {
@@ -28,7 +32,7 @@ const AdminHome = () => {
         setProfilePic(res.data.userData.profilePic);
       }
     } catch (err) {
-      console.log("User fetch error");
+      toast.error(err.message);
     }
   };
 
@@ -37,6 +41,8 @@ const AdminHome = () => {
   }, []);
 
   /* ================= PROFILE UPLOAD ================= */
+  // handleProfileChange: handles profile picture upload to backend
+  // - creates preview instantly, uploads to server, updates userData and profilePic state
   const handleProfileChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -72,6 +78,8 @@ const AdminHome = () => {
   };
 
   /* ================= NAV CLOSE MOBILE ================= */
+  // handleNavClick: closes mobile navigation menu when screen is small
+  // - used to collapse sidebar after clicking navigation link on mobile
   const handleNavClick = () => {
     if (window.innerWidth < 768) {
       setOpen(false);

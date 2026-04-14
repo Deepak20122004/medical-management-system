@@ -1,10 +1,11 @@
 import jwt from "jsonwebtoken";
 
+// userAuth: middleware that verifies JWT token from cookies
+// - extracts user ID from token and sets req.userId for authenticated requests
+// - returns 401 if token is missing or invalid
 const userAuth = async (req, res, next) => {
   const { token } = req.cookies;
-  console.log("Cookies:", req.cookies);
-
-  // console.log("Token from cookie:", token); // Debugging log
+  // console.log("Cookies:", req.cookies);
 
   if (!token) {
     return res
@@ -24,7 +25,7 @@ const userAuth = async (req, res, next) => {
     }
     next();
   } catch (error) {
-    console.error("Error in userAuth middleware:", error);
+    // console.error("Error in userAuth middleware:", error);
     return res.status(401).json({ success: false, message: "Unauthorized" });
   }
 };

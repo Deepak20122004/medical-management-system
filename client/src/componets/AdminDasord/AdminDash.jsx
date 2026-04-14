@@ -1,9 +1,10 @@
 import React, { useEffect, useState, useContext } from "react";
 import axios from "axios";
 import { AppContext } from "../../context/AppContext";
-
+// AdminDash: displays admin dashboard with key statistics
+// - shows count of purchases, sales, stock, suppliers, customers
+// - also reports low stock items and expired medicines
 const AdminDash = () => {
-
   const { backendUrl } = useContext(AppContext);
 
   const [stats, setStats] = useState({
@@ -20,16 +21,15 @@ const AdminDash = () => {
 
   /* ================= FETCH DASHBOARD DATA ================= */
 
+  // fetchDashboard: fetches dashboard statistics from backend API
+  // - calls /api/dashboard, updates stats state with received data
   const fetchDashboard = async () => {
     try {
-
-      const res = await axios.get(
-        `${backendUrl}/api/dashboard`,
-        { withCredentials: true }
-      );
+      const res = await axios.get(`${backendUrl}/api/dashboard`, {
+        withCredentials: true,
+      });
 
       setStats(res.data.data);
-
     } catch (err) {
       console.log(err);
     }
@@ -45,7 +45,6 @@ const AdminDash = () => {
 
   return (
     <section className="w-full mb-8 rounded-xl bg-gradient-to-r from-gray-900 to-gray-800 shadow-lg p-6 md:p-10 flex flex-col gap-8">
-
       <h2 className="text-2xl font-bold text-white mb-2 text-center">
         Admin Dashboard
       </h2>
@@ -53,9 +52,7 @@ const AdminDash = () => {
       {loading ? (
         <p className="text-white text-center">Loading...</p>
       ) : (
-
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-
           {/* Purchase */}
 
           <div className="bg-gradient-to-r from-blue-700 to-blue-500 text-white rounded-lg p-6 shadow flex flex-col items-center">
@@ -104,11 +101,8 @@ const AdminDash = () => {
             <span className="text-lg font-semibold">Expired Items</span>
             <span className="text-2xl font-bold mt-2">{stats.expired}</span>
           </div>
-
         </div>
-
       )}
-
     </section>
   );
 };

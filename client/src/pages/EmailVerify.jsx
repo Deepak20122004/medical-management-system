@@ -1,29 +1,34 @@
-import React, { useContext, useEffect } from "react";
+import React, { useContext } from "react";
 import { AppContext } from "../context/AppContext";
 import { toast } from "react-toastify";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 axios.defaults.withCredentials = true;
 
+// EmailVerify: handles email verification with 6-digit OTP input
+// - provides 6 input fields where user enters OTP received in email
+// - auto-focuses fields during typing, supports paste operation
 const EmailVerify = () => {
   const inputResf = React.useRef([]);
 
-  const { backendUrl, isLoggedin,setIsLoggedIn, userData, getUserData } =
-    useContext(AppContext);
+  const { backendUrl, setIsLoggedIn, getUserData } = useContext(AppContext);
 
   const navigate = useNavigate();
+  // handleInput: auto-focuses next input field when current field is filled
   const handleInput = (e, index) => {
     if (e.target.value.length > 0 && index < inputResf.current.length - 1) {
       inputResf.current[index + 1].focus();
     }
   };
 
+  // handleKeyDown: focuses previous input field on Backspace if current field is empty
   const handleKeyDown = (e, index) => {
     if (e.key === "Backspace" && e.target.value === "" && index > 0) {
       inputResf.current[index - 1].focus();
     }
   };
 
+  // handlPaste: splits pasted text into individual OTP digits and fills input fields
   const handlPaste = (e) => {
     const paste = e.clipboardData.getData("text");
     const pasteArray = paste.split("");
@@ -34,9 +39,10 @@ const EmailVerify = () => {
     });
   };
 
+  // onSubmitHandler: combines OTP digits and sends verification request to backend
+  // - collects all 6 input values, calls verify-account endpoint, navigates to dashboard on success
   const onSubmitHandler = async (e) => {
     try {
-
       e.preventDefault();
       const otpArray = inputResf.current.map((e) => e.value);
       const otp = otpArray.join("");
@@ -47,16 +53,16 @@ const EmailVerify = () => {
           otp,
         },
       );
-            if (data.success) {
+      if (data.success) {
         toast.success(data.message);
-          setIsLoggedIn(true);
-          getUserData();
+        setIsLoggedIn(true);
+        getUserData();
         navigate("/adminhome"); // redirect to home page
       } else {
         toast("invaild otp");
       }
     } catch (error) {
-      toast("invaild otp");
+      toast(error.message);
       // toast.error(error.message);
     }
   };

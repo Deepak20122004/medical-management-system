@@ -2,6 +2,8 @@ import Stock from "../models/Stock.js";
 
 /* ================= ADD STOCK ================= */
 
+// addStock: creates a new stock/purchase invoice with medicines
+// - validates distributor and invoice number, prevents duplicate invoices, stores medicine list
 export const addStock = async (req, res) => {
   try {
     const { distributor, invoiceNumber, invoiceDate, medicines } = req.body;
@@ -46,8 +48,7 @@ export const addStock = async (req, res) => {
       stock,
     });
   } catch (error) {
-    console.log("ADD STOCK ERROR:", error);
-
+    // console.log("ADD STOCK ERROR:", error);
     res.status(500).json({
       success: false,
       message: "Server error",
@@ -57,6 +58,8 @@ export const addStock = async (req, res) => {
 
 /* ================= GET ALL STOCK ================= */
 
+// getAllStock: retrieves all purchase invoices for current user with distributor details
+// - populates distributor name, sorts by newest first
 export const getAllStock = async (req, res) => {
   try {
     const data = await Stock.find({
@@ -71,7 +74,7 @@ export const getAllStock = async (req, res) => {
       data,
     });
   } catch (error) {
-    console.log("GET STOCK ERROR:", error);
+    // console.log("GET STOCK ERROR:", error);
 
     res.status(500).json({
       success: false,
@@ -82,6 +85,8 @@ export const getAllStock = async (req, res) => {
 
 /* ================= GET BY INVOICE NUMBER ================= */
 
+// getStockByInvoiceNumber: retrieves a specific stock invoice by invoice number
+// - returns invoice with all medicine details
 export const getStockByInvoiceNumber = async (req, res) => {
   try {
     const { invoiceNumber } = req.params;
@@ -112,6 +117,8 @@ export const getStockByInvoiceNumber = async (req, res) => {
 
 /* ================= UPDATE INVOICE ================= */
 
+// updateInvoice: updates invoice details like distributor, invoice number, and date
+// - only updates provided fields, keeps existing values if not provided
 export const updateInvoice = async (req, res) => {
   try {
     const { invoiceId } = req.params;
@@ -150,6 +157,7 @@ export const updateInvoice = async (req, res) => {
 
 /* ================= DELETE INVOICE ================= */
 
+// deleteInvoice: removes a complete stock invoice and all associated medicines
 export const deleteInvoice = async (req, res) => {
   try {
     const { invoiceId } = req.params;
@@ -182,6 +190,8 @@ export const deleteInvoice = async (req, res) => {
 
 /* ================= UPDATE MEDICINE ================= */
 
+// updateMedicine: modifies a specific medicine record within an invoice
+// - finds medicine by ID within invoice, updates provided fields
 export const updateMedicine = async (req, res) => {
   try {
     const { invoiceId, medicineId } = req.params;
@@ -224,6 +234,8 @@ export const updateMedicine = async (req, res) => {
 
 /* ================= DELETE MEDICINE ================= */
 
+// deleteMedicine: removes a single medicine record from an invoice
+// - filters out medicine by ID and saves updated invoice
 export const deleteMedicine = async (req, res) => {
   try {
     const { invoiceId, medicineId } = req.params;
@@ -259,6 +271,8 @@ export const deleteMedicine = async (req, res) => {
 
 /* ================= GET BY DISTRIBUTOR ================= */
 
+// getStockByDistributor: retrieves all invoices from a specific distributor
+// - returns invoices sorted by creation date, newest first
 export const getStockByDistributor = async (req, res) => {
   try {
     const { distributorId } = req.params;
@@ -274,7 +288,7 @@ export const getStockByDistributor = async (req, res) => {
       invoices,
     });
   } catch (error) {
-    console.log("DISTRIBUTOR STOCK ERROR:", error);
+    // console.log("DISTRIBUTOR STOCK ERROR:", error);
 
     res.status(500).json({
       success: false,
@@ -283,6 +297,8 @@ export const getStockByDistributor = async (req, res) => {
   }
 };
 
+// searchMedicine: searches for medicines by name across all invoices
+// - uses regex for case-insensitive search, returns matching stock records
 export const searchMedicine = async (req, res) => {
   try {
     const { name } = req.query;
@@ -297,7 +313,7 @@ export const searchMedicine = async (req, res) => {
       data: stocks,
     });
   } catch (err) {
-    console.log(err);
+    // console.log(err);
 
     res.status(500).json({
       success: false,

@@ -18,6 +18,9 @@ import Patient from "./componets/AdminDasord/Patient";
 
 
 
+// App: main application component that defines client-side routes
+// - Uses `react-router-dom` to declare pages and nested routes
+// - Wraps certain routes with `VerifyRoute` or `ProtectedRoutes` to control access
 const App = () => {
   return (
     <>
@@ -33,9 +36,7 @@ const App = () => {
               </VerifyRoute>
             }
           />
-
           <Route path="/reset-password" element={<ResertPassword />} />
-
           <Route
             path="/email-verify"
             element={
@@ -44,7 +45,6 @@ const App = () => {
               </VerifyRoute>
             }
           />
-
           <Route
             path="/adminhome"
             element={

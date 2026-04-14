@@ -6,6 +6,9 @@ import { toast } from "react-toastify";
 import { useNavigate } from 'react-router-dom';
 axios.defaults.withCredentials = true;
 
+// ResertPassword: three-step password reset flow
+// - step 1: user enters email, step 2: enters OTP from email, step 3: enters new password
+// - manages state flow with isEmailSent and isotpSumited flags
 const ResertPassword = () => {
   const { backendUrl } = useContext(AppContext);
   const navigate = useNavigate();
@@ -20,18 +23,21 @@ const ResertPassword = () => {
 
   const inputResf = React.useRef([]);
 
+  // handleInput: auto-focuses next OTP input field when current is filled
   const handleInput = (e, index) => {
     if (e.target.value.length > 0 && index < inputResf.current.length - 1) {
       inputResf.current[index + 1].focus();
     }
   };
 
+  // handleKeyDown: focuses previous input on Backspace if current field empty
   const handleKeyDown = (e, index) => {
     if (e.key === "Backspace" && e.target.value === "" && index > 0) {
       inputResf.current[index - 1].focus();
     }
   };
 
+  // handlPaste: handles pasting OTP, splits text and fills individual input fields
   const handlPaste = (e) => {
     const paste = e.clipboardData.getData("text");
     const pasteArray = paste.split("");
@@ -42,6 +48,8 @@ const ResertPassword = () => {
     });
   };
 
+  // onSubmitEmail: sends password reset OTP to user's email address
+  // - calls send-reset-otp endpoint, sets isEmailSent flag on success
   const onSubmitEmail = async (e) => {
     e.preventDefault();
     try {
@@ -57,6 +65,8 @@ const ResertPassword = () => {
     }
   };
 
+  // onSubmitOtp: combines 6-digit OTP inputs into single value
+  // - sets OTP state and isotpSumited flag to show new password form
   const onSubmitOtp = async (e) => {
     e.preventDefault();
     const otpArray = inputResf.current.map((input) => input.value);
@@ -65,6 +75,8 @@ const ResertPassword = () => {
     setisotpSumited(true);
   };
 
+  // onSubmitNewPassword: sends reset password request with email, OTP, and new password
+  // - calls reset-password endpoint, navigates to dashboard on success
   const onSubmitNewPassword = async (e) => {
     e.preventDefault();
     try {

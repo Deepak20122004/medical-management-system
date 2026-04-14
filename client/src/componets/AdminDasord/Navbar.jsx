@@ -3,7 +3,7 @@ import { NavLink, Link } from "react-router-dom";
 import Logo from "../../assets/logo.svg";
 import { useContext } from "react";
 import { AppContext } from "../../context/AppContext";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
 
@@ -14,32 +14,32 @@ const getNavLinks = (isLoggedIn) => [
 
 const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
-  const { isLoggedIn, backendUrl, setIsLoggedIn, userData, setUserData } =
+  const { isLoggedIn, backendUrl, setIsLoggedIn, setUserData } =
     useContext(AppContext);
   const toggleMenu = () => setMenuOpen(!menuOpen);
   const navigate = useNavigate();
 
-const logout = async ()=>{
-  try {
-      axios.defaults.withCredentials = true
-      const {data} = await axios.post(`${backendUrl}/api/auth/logout`)
-      data.success && setIsLoggedIn(false)
-      data.success && setUserData(false)
-      navigate("/")
-  } catch (error) {
-    toast.error(error.message)
-  }
-}
+  // logout: calls backend logout endpoint, clears session and user data, navigates to home
+  const logout = async () => {
+    try {
+      axios.defaults.withCredentials = true;
+      const { data } = await axios.post(`${backendUrl}/api/auth/logout`);
+      data.success && setIsLoggedIn(false);
+      data.success && setUserData(false);
+      navigate("/");
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
 
+  // loginHandler: toggles logout if user is logged in, otherwise navigates to login page
   const loginHandler = () => {
-
-    if(isLoggedIn){
-      logout()
-    setMenuOpen(false);
-  }else{
-  navigate("/login")
-  }
-
+    if (isLoggedIn) {
+      logout();
+      setMenuOpen(false);
+    } else {
+      navigate("/login");
+    }
   };
 
   return (

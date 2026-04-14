@@ -4,6 +4,9 @@ import { AppContext } from "../context/AppContext";
 import axios from "axios";
 import { toast } from "react-toastify";
 
+// Content: Landing/hero section shown on the home page
+// - shows app description and a CTA button
+// - button behavior depends on user authentication and verification status
 const Content = () => {
   const navigate = useNavigate();
   const { backendUrl } = useContext(AppContext);
@@ -13,6 +16,10 @@ const Content = () => {
 
   console.log(userEmail);
 
+  // RegisterHandler: handles click on CTA button
+  // - if user is admin/verified -> navigate to admin dashboard
+  // - if user is logged in but not verified -> trigger OTP send and navigate to email verify
+  // - if not logged in -> navigate to login page
   const RegisterHandler = async () => {
     if (adminUser) {
       navigate("/adminhome");

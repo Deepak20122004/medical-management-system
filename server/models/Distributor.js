@@ -1,5 +1,7 @@
 import mongoose from "mongoose";
 
+// Distributor model: stores supplier/distributor details for a user
+// Fields: gstin, district, name, mobile, licence and a reference to owning user
 const distributorSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,

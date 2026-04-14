@@ -5,6 +5,9 @@ import { toast } from "react-toastify";
 import { AppContext } from "../context/AppContext";
 import axios from "axios";
 
+// Login: handles user registration and login form
+// - switches between "Login" and "Sign Up" modes
+// - calls backend auth endpoints and manages session state
 const Login = () => {
   const Navigate = useNavigate();
   const { backendUrl, setIsLoggedIn, getUserData } = useContext(AppContext);
@@ -14,7 +17,11 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
+  // onSubmitHandler: processes login or sign-up form submission
+  // - validates input, calls appropriate auth endpoint, manages navigation and session
   const onSubmitHandler = async (e) => {
+    // sendVerificationOtp: requests OTP email after successful registration
+    // - called after sign-up, triggers email with verification code
     const sendVerificationOtp = async () => {
       try {
         axios.defaults.withCredentials = true;
@@ -25,7 +32,6 @@ const Login = () => {
         if (data.success) {
           toast.success(data.message);
         } else {
-          
           toast.error(data.message);
         }
       } catch (error) {
@@ -48,35 +54,28 @@ const Login = () => {
           sendVerificationOtp();
           Navigate("/email-verify"); // redirect to verify you account throw otp
         } else {
-          
           toast.error(data.message);
         }
       } else {
-
         const { data } = await axios.post(`${backendUrl}/api/auth/login`, {
           email,
           password,
         });
-        console.log("data" , data)
+        // console.log("data" , data)
         if (data.success) {
           setIsLoggedIn(true);
           getUserData();
-          Navigate("/adminhome"); // redirect to send otp
+          Navigate("/adminhome");
         } else {
-          console.log("login data", data);
-          // toast.error(data.message);
-          console.log("login filed", data);
+          // console.log("login data", data);
+          toast.error(data.message);
+          // console.log("login filed", data);
         }
-      
       }
     } catch (error) {
-      toast.error("Please enter valid Email and Password");
+      toast.error(error.message);
     }
   };
-
-
-
-
 
   return (
     <>
@@ -85,7 +84,7 @@ const Login = () => {
           <h2 className="text-3xl font-semibold text-white text-center mb-3">
             {state === "Sign Up" ? "Create Account" : "Login"}
           </h2>
-          <p className="text-center text-sm mb-6">  
+          <p className="text-center text-sm mb-6">
             {state === "Sign Up"
               ? "Create you account"
               : "Login to your  account !"}
@@ -141,7 +140,10 @@ const Login = () => {
             <p className="text-gray-400 text-center text-xs mt-4">
               Already have an account?{" "}
               <span
-                onClick={() => setState("Login")}
+                onClick={() => {
+                  console.log("clicked");
+                  setState("Login");
+                }}
                 className="text-blue-400 cursor-pointer underline"
               >
                 Login here

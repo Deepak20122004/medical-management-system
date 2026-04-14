@@ -5,6 +5,10 @@ import Distributor from "../models/Distributor.js";
 
 
 
+// getDashboard: aggregates statistics for admin dashboard
+// - counts purchases, sales, suppliers, customers, total medicines in stock
+// - identifies low stock items (quantity < 5) and expired medicines
+// - returns all dashboard metrics for display
 export const getDashboard = async (req, res) => {
   try {
     const purchase = await Stock.countDocuments({ user: req.userId });

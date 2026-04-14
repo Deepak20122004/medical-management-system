@@ -6,11 +6,16 @@ import { toast } from "react-toastify";
 import { AppContext } from "../../context/AppContext";
 
 const gstOptions = ["0%", "3%", "5%", "12%", "18%", "28%"];
+// Stock: main stock management component
+// - Fetches and displays purchase invoices (stock) and their medicines
+// - Supports adding new invoices, adding/editing medicines (temporary and saved), deleting items/invoices
+// - Provides search, pagination and basic stats (total, low stock, expired)
 const Stock = () => {
   const { backendUrl } = useContext(AppContext);
-  console.log(backendUrl);
+  // console.log(backendUrl);
   // const API = "http://localhost:4000/api/stock";
   // http://localhost:4000
+
   const [data, setData] = useState([]);
   const [stats, setStats] = useState({
     totalStock: 0,
@@ -62,6 +67,8 @@ const Stock = () => {
 
   /* ================= FETCH ================= */
 
+  // fetchStock: retrieve all stock invoices from backend and normalize items
+  // - maps `medicines` or `items` to `items` field and ensures a stable `id`
   const fetchStock = async () => {
     try {
       setLoading(true);
@@ -80,6 +87,7 @@ const Stock = () => {
     }
   };
 
+  // fetchStats: retrieve aggregated stock statistics (total, lowStock, expired)
   const fetchStats = async () => {
     try {
       const res = await axios.get(`${backendUrl}/api/stock`);
@@ -92,15 +100,17 @@ const Stock = () => {
   /*=========*/
   const [distributors, setDistributors] = useState([]);
 
+  // fetchDistributors: load distributor list for the invoice form dropdown
   const fetchDistributors = async () => {
     try {
-      const res = await axios.get("http://localhost:4000/api/distributor");
+      const res = await axios.get(`${backendUrl}/api/distributor`);
       setDistributors(res.data.data);
     } catch {
       toast.error("Failed to load distributors");
     }
   };
 
+  // Load initial data on mount: stock list, stats and distributor options
   useEffect(() => {
     fetchStock();
     fetchStats();
@@ -111,11 +121,13 @@ const Stock = () => {
 
  
 
+  // handleInvoiceChange: update invoice form fields (distributor, number, date)
   const handleInvoiceChange = (e) => {
     const { name, value } = e.target;
     setInvoiceForm((p) => ({ ...p, [name]: value }));
   };
 
+  // handleInvoiceSubmit: validate invoice info and open medicine entry form
   const handleInvoiceSubmit = (e) => {
     e.preventDefault();
     if (!invoiceForm.distributor || !invoiceForm.invoiceNumber) {
@@ -128,6 +140,11 @@ const Stock = () => {
 
   /* ================= ADD MEDICINE TEMP ================= */
 
+  // handleAddItem: add or update a medicine entry
+  // - If `editingExisting.itemId` is set, update the saved medicine via API
+  // - Else if `editIndex` is set, update a temporary item in `currentItems`
+  // - Otherwise append the new item to `currentItems`
+  // - Reset `itemForm` after add/update
   const handleAddItem = (e) => {
     e.preventDefault();
 
@@ -179,6 +196,7 @@ const Stock = () => {
 
   /* ================= SAVE STOCK ================= */
 
+  // handleSaveStock: validate invoice and medicines, then POST to backend to create stock record
   const handleSaveStock = async () => {
     if (!invoiceForm.distributor || !invoiceForm.invoiceNumber) {
       toast.error("Fill invoice details");
@@ -222,10 +240,12 @@ const Stock = () => {
     }
   };
 
+  // handleShowDeleteConfirm: open confirmation modal for deleting a medicine from an invoice
   const handleShowDeleteConfirm = (invoiceId, itemIndex) => {
     setDeleteConfirm({ show: true, invoiceId, itemId: itemIndex });
   };
 
+  // handleConfirmDelete: delete a medicine from an invoice via API, refresh data
   const handleConfirmDelete = async () => {
     if (!deleteConfirm.invoiceId && deleteConfirm.invoiceId !== 0) return;
     try {
@@ -245,6 +265,9 @@ const Stock = () => {
     }
   };
 
+  // handleEditMedicine: pre-fill itemForm for editing a medicine
+  // - if invoiceId and item._id present, set `editingExisting` to update saved item
+  // - otherwise set `editIndex` to edit a temporary item in `currentItems`
   const handleEditMedicine = (item, invoiceId, itemIndex) => {
     setItemForm({
       product: item.product || item.medicine || "",
@@ -268,6 +291,7 @@ const Stock = () => {
   };
 
   /*=============ADD INVOICE DELETE=========*/
+  // handleDeleteInvoice: delete an entire invoice (after confirmation)
   const handleDeleteInvoice = async (invoiceId) => {
     if (!window.confirm("Delete full invoice?")) return;
 
@@ -289,6 +313,7 @@ const Stock = () => {
   const indexOfLast = currentPage * perPage;
   const indexOfFirst = indexOfLast - perPage;
 
+  // filtered: filter invoices by search query (invoice number or distributor name)
   const filtered = data.filter((inv) => {
     const q = (search || "").toLowerCase();
     const invNumber = (inv.invoiceNumber || "").toLowerCase();

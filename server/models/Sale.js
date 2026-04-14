@@ -1,5 +1,8 @@
 import mongoose from "mongoose";
 
+// Sale model: represents a pharmacy sale/invoice
+// - `medicineSchema` defines each medicine line item on the bill
+// - `saleSchema` stores patient, doctor, medicines, totals and timestamps
 const medicineSchema = new mongoose.Schema({
   medicine: {
     type: String,

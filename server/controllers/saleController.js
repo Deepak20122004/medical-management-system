@@ -2,7 +2,10 @@ import Sale from "../models/Sale.js";
 import Patient from "../models/Patient.js";
 
 
-export const addSale = async (req, res) => {
+// addSale: creates a new medicine sale record with patient, doctor, medicines and discount
+// - calculates total amount and applies discount, stores sale with grand total
+// - updates or creates patient record with name and mobile
+export const  addSale = async (req, res) => {
   try {
     const { patient, doctor, mobile, date, medicines, discount } = req.body;
 
@@ -72,6 +75,7 @@ export const addSale = async (req, res) => {
 
 /* ================= GET SALES ================= */
 
+// getSales: retrieves all sale records for current user sorted by newest first
 export const getSales = async (req, res) => {
   try {
     const data = await Sale.find({
@@ -89,6 +93,8 @@ export const getSales = async (req, res) => {
 
 /* ================= DELETE SALE ================= */
 
+// deleteSale: removes a specific sale record by ID
+// - ensures user can only delete their own sales
 export const deleteSale = async (req, res) => {
   try {
     const sale = await Sale.findOneAndDelete({
@@ -114,6 +120,8 @@ export const deleteSale = async (req, res) => {
 
 /* ========= SEARCH PATIENT ========= */
 
+// searchPatient: searches for patients by name with case-insensitive regex
+// - returns up to 5 matching patient records
 export const searchPatient = async (req, res) => {
   try {
     const { name } = req.query;
