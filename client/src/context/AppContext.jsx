@@ -22,15 +22,23 @@ export const AppContextProvider = ({ children }) => {
   // - on failure: shows a toast prompting the user to login
   const getAuthState = async () => {
     try {
+      if (!backendUrl) {
+        return;
+      }
+
       const { data } = await axios.get(`${backendUrl}/api/auth/is-auth`);
       if (data.success) {
         setIsLoggedIn(true);
-        getUserData();
+        await getUserData();
       }
     } catch (error) {
-      // network or auth error: inform the user they should login
-      console.log(error);
-      toast("login to access the features");
+      if (error.response?.status === 401) {
+        setIsLoggedIn(false);
+        setUserData(false);
+        return;
+      }
+
+      toast.error(error.response?.data?.message || error.message);
     }
   };
 
@@ -39,10 +47,20 @@ export const AppContextProvider = ({ children }) => {
   // - shows error toast when request fails or backend returns an error
   const getUserData = async () => {
     try {
+      if (!backendUrl) {
+        return;
+      }
+
       const { data } = await axios.get(`${backendUrl}/api/user/data`);
       data.success ? setUserData(data.userData) : toast.error(data.message);
     } catch (error) {
-      toast.error(error.message);
+      if (error.response?.status === 401) {
+        setIsLoggedIn(false);
+        setUserData(false);
+        return;
+      }
+
+      toast.error(error.response?.data?.message || error.message);
     }
   };
 
@@ -56,6 +74,7 @@ export const AppContextProvider = ({ children }) => {
     setIsLoggedIn,
     userData,
     setUserData,
+    getAuthState,
     getUserData,
   };
 

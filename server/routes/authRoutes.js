@@ -35,8 +35,8 @@ authRouter.post("/send-verify-otp", userAuth, sendVerifyOtp);
 authRouter.post("/verify-account", userAuth, verifyEmail);
 
 // Check authentication status for current session.
-// Returns user identity or auth=false. Requires authentication.
-authRouter.get("/is-auth", userAuth, isAuthenticated);
+// Returns success=false when no valid auth cookie exists.
+authRouter.get("/is-auth", isAuthenticated);
 
 // Send password-reset OTP to the provided email address.
 // No authentication required.

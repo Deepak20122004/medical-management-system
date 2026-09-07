@@ -1,10 +1,11 @@
 import React, { useState, useContext, useEffect } from "react";
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { AppContext } from "../../context/AppContext";
 import { toast } from "react-toastify";
 import axios from "axios";
 
 const navOptions = [
+  { to: ".", label: "Dashboard" },
   { to: "purchase", label: "Purchase" },
   { to: "stock", label: "Stock" },
   { to: "patient", label: "Sale" },
@@ -16,7 +17,9 @@ const navOptions = [
 const AdminHome = () => {
   const [open, setOpen] = useState(false);
   const { userData, backendUrl, setUserData } = useContext(AppContext);
+  const { setIsLoggedIn } = useContext(AppContext);
   const [profilePic, setProfilePic] = useState(null);
+  const navigate = useNavigate();
 
   /* ================= FETCH USER DATA ON LOAD ================= */
   // fetchUser: retrieves current user data and profile picture from backend
@@ -77,20 +80,34 @@ const AdminHome = () => {
     }
   };
 
+  const logout = async () => {
+    try {
+      axios.defaults.withCredentials = true;
+      const res = await axios.post(`${backendUrl}/api/auth/logout`);
+      if (res.data.success) {
+        setIsLoggedIn(false);
+        setUserData(false);
+        navigate("/");
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Logout failed");
+    }
+  };
+
   /* ================= NAV CLOSE MOBILE ================= */
   // handleNavClick: closes mobile navigation menu when screen is small
   // - used to collapse sidebar after clicking navigation link on mobile
   const handleNavClick = () => {
-    if (window.innerWidth < 768) {
+    if (window.innerWidth < 1024) {
       setOpen(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row bg-gradient-to-br from-blue-100 via-blue-200 to-blue-50 relative">
+    <div className="admin-shell min-h-screen flex flex-col lg:flex-row relative">
       {/* Mobile Menu Button - Important for responsiveness */}
       <button
-        className="fixed top-4 left-4 z-50 md:hidden bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-lg shadow-lg focus:outline-none transition-all duration-300 active:scale-95"
+        className={`admin-mobile-toggle fixed top-4 left-4 z-50 lg:hidden bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-lg shadow-lg focus:outline-none transition-all duration-300 active:scale-95 ${open ? "is-open" : ""}`}
         onClick={() => setOpen(!open)}
         aria-label="Toggle menu"
       >
@@ -128,44 +145,25 @@ const AdminHome = () => {
       {/* Mobile Overlay */}
       {open && (
         <div
-          className="fixed inset-0 bg-black/50 z-40 md:hidden backdrop-blur-sm"
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden backdrop-blur-sm"
           onClick={() => setOpen(false)}
         ></div>
       )}
 
       {/* Sidebar - Responsive classes added back */}
       <aside
-        className={`fixed md:sticky md:top-0 z-40 inset-y-0 left-0 w-[280px] md:w-72 bg-white shadow-xl transition-transform duration-200 ease-out h-screen
-        ${open ? "translate-x-0" : "-translate-x-full"} md:translate-x-0 flex flex-col`}
+        className={`fixed lg:sticky lg:top-0 z-40 inset-y-0 left-0 w-[280px] lg:w-72 bg-white shadow-xl transition-transform duration-200 ease-out h-screen
+        ${open ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0 flex flex-col`}
       >
         {/* Mobile Header with Close Button */}
-        <div className="md:hidden flex items-center justify-between p-4 bg-blue-50">
+        <div className="admin-sidebar__mobile-header lg:hidden flex items-center justify-between p-4 bg-blue-50">
           <span className="text-lg font-semibold text-blue-700">
             Admin Panel
           </span>
-          <button
-            className="p-2 hover:bg-blue-100 rounded-lg transition-colors"
-            onClick={() => setOpen(false)}
-          >
-            <svg
-              className="w-6 h-6 text-blue-600"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          
-          </button>
         </div>
 
         {/* Profile Section */}
-        <div className="flex flex-col items-center gap-3 p-6 border-b border-blue-100 bg-gradient-to-b from-blue-50 to-white">
+        <div className="admin-sidebar__profile flex flex-col items-center gap-3 p-6 border-b border-blue-100 bg-gradient-to-b from-blue-50 to-white">
           <label
             htmlFor="profile-upload"
             className="cursor-pointer relative group"
@@ -208,7 +206,7 @@ const AdminHome = () => {
         </div>
 
         {/* Navigation Menu */}
-        <nav className="flex-1 flex flex-col gap-2 p-4 overflow-y-auto">
+        <nav className="admin-sidebar__nav flex-1 flex flex-col gap-2 p-4">
           {navOptions.map(({ to, label }) => (
             <NavLink
               key={to}
@@ -227,10 +225,20 @@ const AdminHome = () => {
             </NavLink>
           ))}
         </nav>
+
+        <div className="admin-sidebar__footer">
+          <button type="button" onClick={logout} className="admin-sidebar__logout">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M10 5H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h4" />
+              <path d="m14 16 4-4-4-4M9 12h9" />
+            </svg>
+            Logout
+          </button>
+        </div>
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 min-h-screen p-4 md:p-6 pt-20 md:pt-6 overflow-x-hidden">
+      <main className="flex-1 min-h-screen p-4 md:p-6 overflow-x-hidden">
         <div className="max-w-7xl mx-auto h-full">
           <Outlet />
         </div>

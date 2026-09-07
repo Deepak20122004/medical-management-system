@@ -88,7 +88,7 @@ const ResertPassword = () => {
       
       // console.log(data);
       data.success ? toast.success(data.message) : toast.error(data.message);
-      data.success && navigate("/adminhome");
+      data.success && navigate("/login");
     } catch (error) {
       // console.log(error ,"reset password error");
       toast.error(error.message);
@@ -97,21 +97,24 @@ const ResertPassword = () => {
 
 
   return (
-    <div className="flex items-center justify-center  min-h-screen px-6 sm:px-0 bg-gradient-to-r from-blue-200  to-purple-500">
+    <div className="auth-page flex items-center justify-center min-h-screen px-4 sm:px-6 py-8">
       {/* enter email id  */}
       {!isEmailSent && (
         <form
           onSubmit={onSubmitEmail}
-          className="bg-slate-900 p-8 rounded-lg shadow-lg w-96 text-sm"
+          className="auth-card p-6 sm:p-9 rounded-2xl shadow-lg w-full max-w-[420px] text-sm"
         >
-          <h1 className="text-white text-2xl font-semibold text-center mb-4">
-            {" "}
+          <div className="auth-card__brand">
+            <img src={assets.logo} alt="MedicalShop logo" />
+            <span>MedicalShop</span>
+          </div>
+          <h1 className="text-2xl font-semibold text-center mb-4">
             Reset Password
           </h1>
-          <p className="text-center mb-6 text-indigo-300">
+          <p className="auth-card__subtitle text-center mb-6">
             Enter your resistered email address
           </p>
-          <div className="mb-4 flex items-center gap-3 w-full px-5 py-2.5 rounded-full bg-[#333a5c]">
+          <div className="auth-field mb-4 flex items-center gap-3 w-full px-5 py-2.5 rounded-full">
             <img src={assets.mailIcon} alt="" className="w-3 h-3" />
             <input
               type="text"
@@ -119,10 +122,10 @@ const ResertPassword = () => {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Email Address"
               required
-              className="bg-transparent outline-none text-white w-full"
+              className="bg-transparent outline-none w-full"
             />
           </div>
-          <button className="w-full py-2.5 rounded-full bg-gradient-to-r from-indigo-500 to-indigo-900 text-white font-medium cursor-pointer">
+          <button className="auth-submit w-full py-2.5 rounded-full text-white font-medium cursor-pointer">
             Submit
           </button>
         </form>
@@ -132,17 +135,20 @@ const ResertPassword = () => {
       {!isotpSumited && isEmailSent && (
         <form
           onSubmit={onSubmitOtp}
-          className="bg-slate-900 p-8 rounded-lg shadow-lg w-96 text-sm"
+          className="auth-card p-6 sm:p-9 rounded-2xl shadow-lg w-full max-w-[420px] text-sm"
         >
-          <h1 className="text-white text-2xl font-semibold text-center mb-4">
-            {" "}
+          <div className="auth-card__brand">
+            <img src={assets.logo} alt="MedicalShop logo" />
+            <span>MedicalShop</span>
+          </div>
+          <h1 className="text-2xl font-semibold text-center mb-4">
             Reset password OTP
           </h1>
-          <p className="text-center mb-6 text-indigo-300">
+          <p className="auth-card__subtitle text-center mb-6">
             Enter the 6-digit OTP sent to your email
           </p>
 
-          <div className="flex justify-between mb-8" onPaste={handlPaste}>
+            <div className="auth-otp-grid flex justify-between mb-8" onPaste={handlPaste}>
             {Array(6)
               .fill(0)
               .map((_, index) => (
@@ -154,11 +160,11 @@ const ResertPassword = () => {
                   ref={(e) => (inputResf.current[index] = e)}
                   onInput={(e) => handleInput(e, index)}
                   onKeyDown={(e) => handleKeyDown(e, index)}
-                  className="w-12 h-12 bg-[#333A5C] text-white text-center text-xl rounded-md"
+                  className="auth-otp w-12 h-12 text-center text-xl rounded-md"
                 />
               ))}
           </div>
-          <button className="w-full py-2.5 rounded-full bg-gradient-to-r from-indigo-500 to-indigo-900 text-white font-medium">
+          <button className="auth-submit w-full py-2.5 rounded-full text-white font-medium">
             Submit
           </button>
         </form>
@@ -166,15 +172,18 @@ const ResertPassword = () => {
 
       {/* Enetr new Password */}
       {isotpSumited && isEmailSent && (
-        <form onSubmit={onSubmitNewPassword} className="bg-slate-900 p-8 rounded-lg shadow-lg w-96 text-sm">
-          <h1 className="text-white text-2xl font-semibold text-center mb-4">
-            {" "}
+        <form onSubmit={onSubmitNewPassword} className="auth-card p-6 sm:p-9 rounded-2xl shadow-lg w-full max-w-[420px] text-sm">
+          <div className="auth-card__brand">
+            <img src={assets.logo} alt="MedicalShop logo" />
+            <span>MedicalShop</span>
+          </div>
+          <h1 className="text-2xl font-semibold text-center mb-4">
             New Password
           </h1>
-          <p className="text-center mb-6 text-indigo-300">
+          <p className="auth-card__subtitle text-center mb-6">
             Enter your New Password Below
           </p>
-          <div className="mb-4 flex items-center gap-3 w-full px-5 py-2.5 rounded-full bg-[#333a5c]">
+          <div className="auth-field mb-4 flex items-center gap-3 w-full px-5 py-2.5 rounded-full">
             <img src={assets.lockIcon} alt="" className="w-3 h-3" />
             <input
               type="password"
@@ -182,10 +191,10 @@ const ResertPassword = () => {
               onChange={(e) => setnewPassword(e.target.value)}
               placeholder="New Password"
               required
-              className="bg-transparent outline-none text-white w-full"
+              className="bg-transparent outline-none w-full"
             />
           </div>
-          <button className="w-full py-2.5 rounded-full bg-gradient-to-r from-indigo-500 to-indigo-900 text-white font-medium cursor-pointer">
+          <button className="auth-submit w-full py-2.5 rounded-full text-white font-medium cursor-pointer">
             Submit
           </button>
         </form>

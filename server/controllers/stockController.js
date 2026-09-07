@@ -22,6 +22,32 @@ export const addStock = async (req, res) => {
       });
     }
 
+    if (!invoiceDate) {
+      return res.status(400).json({
+        success: false,
+        message: "Invoice Date required",
+      });
+    }
+
+    const invalidMedicine = medicines.find(
+      (medicine) =>
+        !medicine.product ||
+        !medicine.hsn ||
+        !medicine.batchNo ||
+        !medicine.batchExpiry ||
+        !medicine.unitPerPack ||
+        medicine.quantity === "" ||
+        medicine.rate === "" ||
+        medicine.mrp === "",
+    );
+
+    if (invalidMedicine) {
+      return res.status(400).json({
+        success: false,
+        message: "Complete all medicine details before saving",
+      });
+    }
+
     const exist = await Stock.findOne({
       invoiceNumber,
       user: req.userId,
@@ -48,10 +74,29 @@ export const addStock = async (req, res) => {
       stock,
     });
   } catch (error) {
-    // console.log("ADD STOCK ERROR:", error);
+    console.error("ADD STOCK ERROR:", error);
+
+    if (error.code === 11000) {
+      return res.status(409).json({
+        success: false,
+        message: "Invoice number already exists. Use a different number.",
+      });
+    }
+
+    if (error.name === "ValidationError") {
+      const message = Object.values(error.errors)
+        .map((item) => item.message)
+        .join(", ");
+
+      return res.status(400).json({
+        success: false,
+        message: message || "Invalid stock details",
+      });
+    }
+
     res.status(500).json({
       success: false,
-      message: "Server error",
+      message: "Unable to save stock right now",
     });
   }
 };

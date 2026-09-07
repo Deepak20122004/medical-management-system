@@ -1,11 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
+import { AppContext } from "../../context/AppContext";
 
 // Patients: displays list of patient bills with view and delete functionality
 // - fetches all sale records from backend, supports pagination (6 items per page)
 // - includes bill details modal that shows patient, medicines, and discount info
 const Patients = () => {
+  const { backendUrl } = useContext(AppContext);
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedBill, setSelectedBill] = useState(null);
@@ -13,16 +15,14 @@ const Patients = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const patientsPerPage = 6;
 
-  const token = localStorage.getItem("token");
-
   // fetchPatients: retrieves all sale bills from backend
   // - sets loading state, fetches from /api/sale, updates patients list
   const fetchPatients = async () => {
     try {
       setLoading(true);
 
-      const res = await axios.get("http://localhost:4000/api/sale", {
-        headers: { token },
+      const res = await axios.get(`${backendUrl}/api/sale`, {
+        withCredentials: true,
       });
 
       const data = res.data.sales || res.data.data || [];
@@ -44,14 +44,13 @@ const Patients = () => {
     if (!window.confirm("Delete this bill?")) return;
 
     try {
-      await axios.delete(`http://localhost:4000/api/sale/${id}`, {
-        headers: { token },
+      await axios.delete(`${backendUrl}/api/sale/${id}`, {
+        withCredentials: true,
       });
 
       toast.success("Bill deleted successfully");
-
-      fetchPatients();
-    } catch (err) {
+      setPatients((previous) => previous.filter((patient) => patient._id !== id));
+    } catch {
       toast.error("Delete failed");
     }
   };
@@ -68,7 +67,7 @@ const Patients = () => {
   const totalPages = Math.ceil(patients.length / patientsPerPage);
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
+    <div className="admin-page">
       <h1 className="text-3xl font-bold mb-6 text-gray-800">
         Patients & Bills
       </h1>
@@ -159,7 +158,7 @@ ${
 
       {selectedBill && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center">
-          <div className="bg-white w-[90%] md:w-[600px] rounded-xl p-6">
+          <div className="bg-white w-[90%] md:w-150 rounded-xl p-6">
             <h2 className="text-xl font-bold mb-4">Patient Bill</h2>
 
             <div className="mb-4">

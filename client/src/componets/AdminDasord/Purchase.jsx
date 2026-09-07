@@ -95,17 +95,19 @@ const Distributor = () => {
 
   /* ================= DELETE ================= */
 
-  // confirmDelete: delete distributor with id `deleteId` via API
-  const confirmDelete = async () => {
+  // confirmDelete: delete the selected distributor directly by ID
+  const confirmDelete = async (distributorId) => {
     try {
-      await axios.delete(`${backendUrl}/api/distributor/${deleteId}`, {
+      await axios.delete(`${backendUrl}/api/distributor/${distributorId}`, {
         withCredentials: true,
       });
       toast.success("Distributor Deleted");
       setDeleteId(null);
-      fetchData();
+      setData((previous) =>
+        previous.filter((distributor) => distributor._id !== distributorId),
+      );
     } catch (error) {
-      toast.error(error.message);
+      toast.error(error.response?.data?.message || "Delete failed");
     }
   };
 
@@ -129,8 +131,8 @@ const Distributor = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-r from-blue-100 to-purple-200 p-3 sm:p-6">
-      <div className="max-w-6xl mx-auto bg-white shadow-xl rounded-2xl p-4 sm:p-8">
+    <div className="admin-page">
+      <div className="p-0">
         <h2 className="text-2xl sm:text-3xl font-bold text-center text-blue-700 mb-6">
           Distributor Management
         </h2>
@@ -153,7 +155,7 @@ const Distributor = () => {
             />
           ))}
 
-          <button className="md:col-span-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg font-semibold hover:opacity-90 transition">
+          <button className="md:col-span-2 bg-linear-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg font-semibold hover:opacity-90 transition">
             {editingId ? "Update Distributor" : "Add Distributor"}
           </button>
         </form>
@@ -198,7 +200,6 @@ const Distributor = () => {
                               "Are you sure to delete this distributor?",
                             )
                           ) {
-                            setDeleteId(d._id);
                             confirmDelete(d._id);
                           }
                         }}
@@ -256,7 +257,11 @@ const Distributor = () => {
                 </button>
 
                 <button
-                  onClick={() => setDeleteId(d._id)}
+                  onClick={() => {
+                    if (window.confirm("Are you sure to delete this distributor?")) {
+                      confirmDelete(d._id);
+                    }
+                  }}
                   className="bg-red-500 px-3 py-1 rounded text-white text-sm"
                 >
                   Delete

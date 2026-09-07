@@ -1,15 +1,16 @@
+import dotenv from "dotenv";
 import express from "express";
 import cors from "cors";
-import "dotenv/config";
 import cookieParser from "cookie-parser";
 import connectDB from "./config/mongodb.js";
 import authRouter from "./routes/authRoutes.js";
-import userRouter from "./routes/usreRoutes.js";
+import userRouter from "./routes/userRoutes.js";
 import distributorRoutes from "./routes/distributorRoutes.js";
 import stockRoutes from "./routes/stockRoutes.js";
 import saleRoutes from "./routes/saleRoutes.js";
 import dashboardRoutes from "./routes/dashBoardRoutes.js";
 
+dotenv.config();
 const app = express();
 const port = process.env.PORT || 4000;
 connectDB();

@@ -210,23 +210,48 @@ const Sale = () => {
 
   <style>
 
+  :root { color-scheme: light; }
   body{
-  font-family:Arial;
-  padding:20px;
+  font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+  color:#17252a;
+  background:#f6f8f8;
+  padding:32px;
+  }
+
+  #print-bill{
+  max-width:760px;
+  margin:0 auto;
+  background:#fff;
+  border:1px solid #dce5e6;
+  border-top:5px solid #078b87;
+  border-radius:10px;
+  padding:28px;
+  }
+
+  h2{
+  color:#056c69;
+  letter-spacing:.04em;
+  margin-top:0;
   }
 
   table{
   width:100%;
   border-collapse:collapse;
+  margin-top:18px;
   }
 
   th,td{
-  border:1px solid black;
-  padding:6px;
+  border-bottom:1px solid #dce5e6;
+  padding:10px;
+  text-align:left;
   }
 
-  h2{
-  text-align:center;
+  th{
+  background:#eef7f6;
+  color:#3e5b60;
+  font-size:12px;
+  text-transform:uppercase;
+  letter-spacing:.06em;
   }
 
   </style>
@@ -254,7 +279,7 @@ const Sale = () => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto bg-white shadow-xl rounded-xl p-8 mt-8">
+    <div className="admin-page max-w-3xl">
       <h2 className="text-2xl font-bold text-center text-blue-700 mb-6">
         Pharmacy Sale
       </h2>
@@ -457,7 +482,7 @@ const Sale = () => {
 
       {step === 3 && (
         <div className="mt-6">
-          <div id="print-bill">
+          <div id="print-bill" className="invoice-paper">
             <h2 className="text-center text-xl font-bold">MEDICAL STORE</h2>
 
             <p>Patient: {info.patient}</p>

@@ -1,11 +1,45 @@
 import axios from "axios";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { useContext } from "react";
 import { useEffect } from "react";
 import { toast } from "react-toastify";
 import { AppContext } from "../../context/AppContext";
 
 const gstOptions = ["0%", "3%", "5%", "12%", "18%", "28%"];
+
+const normalizeImportHeader = (header) =>
+  header.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+const parseImportCsv = (text) => {
+  const lines = text
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  if (lines.length < 2) return [];
+
+  const headers = lines[0].split(",").map(normalizeImportHeader);
+  return lines.slice(1).map((line) => {
+    const values = line.split(",");
+    const row = {};
+    headers.forEach((header, index) => {
+      row[header] = values[index]?.trim() || "";
+    });
+
+    return {
+      product: row.product || row.medicine || row.productname || "",
+      hsn: row.hsn || "",
+      batchNo: row.batchno || row.batch || "",
+      batchExpiry: row.batchexpiry || row.expiry || "",
+      gst: row.gst || "12%",
+      unitPerPack: row.unitperpack || row.pack || "",
+      quantity: row.quantity || row.qty || "",
+      free: row.free || "0",
+      rate: row.rate || "",
+      mrp: row.mrp || "",
+    };
+  });
+};
 // Stock: main stock management component
 // - Fetches and displays purchase invoices (stock) and their medicines
 // - Supports adding new invoices, adding/editing medicines (temporary and saved), deleting items/invoices
@@ -26,6 +60,7 @@ const Stock = () => {
   const [loading, setLoading] = useState(false);
 
   const [search, setSearch] = useState("");
+  const [stockFilter, setStockFilter] = useState("all");
 
   const [showInvoiceForm, setShowInvoiceForm] = useState(false);
   const [showMedicineForm, setShowMedicineForm] = useState(false);
@@ -64,6 +99,7 @@ const Stock = () => {
     invoiceId: null,
     itemId: null,
   });
+  const bulkImportRef = useRef(null);
 
   /* ================= FETCH ================= */
 
@@ -138,6 +174,38 @@ const Stock = () => {
     setShowMedicineForm(true);
   };
 
+  const handleBulkImport = async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      const importedItems = parseImportCsv(text);
+      const validItems = importedItems.filter(
+        (item) =>
+          item.product &&
+          item.hsn &&
+          item.batchNo &&
+          item.batchExpiry &&
+          item.unitPerPack &&
+          item.quantity !== "" &&
+          item.rate !== "" &&
+          item.mrp !== "",
+      );
+
+      if (!validItems.length) {
+        toast.error("No valid medicine rows found in CSV");
+        return;
+      }
+
+      setCurrentItems((previous) => [...previous, ...validItems]);
+      toast.success(`${validItems.length} medicines imported`);
+    } catch {
+      toast.error("Unable to read CSV file");
+    }
+  };
+
   /* ================= ADD MEDICINE TEMP ================= */
 
   // handleAddItem: add or update a medicine entry
@@ -198,8 +266,12 @@ const Stock = () => {
 
   // handleSaveStock: validate invoice and medicines, then POST to backend to create stock record
   const handleSaveStock = async () => {
-    if (!invoiceForm.distributor || !invoiceForm.invoiceNumber) {
-      toast.error("Fill invoice details");
+    if (
+      !invoiceForm.distributor ||
+      !invoiceForm.invoiceNumber ||
+      !invoiceForm.invoiceDate
+    ) {
+      toast.error("Fill distributor, invoice number and date");
       return;
     }
 
@@ -210,12 +282,41 @@ const Stock = () => {
 
     try {
       setLoading(true);
-      await axios.post(`${backendUrl}/api/stock/add`, {
-        distributor: invoiceForm.distributor,
-        invoiceNumber: invoiceForm.invoiceNumber,
-        invoiceDate: invoiceForm.invoiceDate,
-        medicines: currentItems,
-      });
+      const medicines = currentItems.map((medicine) => ({
+        ...medicine,
+        quantity: Number(medicine.quantity),
+        free: Number(medicine.free || 0),
+        rate: Number(medicine.rate),
+        mrp: Number(medicine.mrp),
+      }));
+
+      if (
+        medicines.some(
+          (medicine) =>
+            !medicine.product ||
+            !medicine.hsn ||
+            !medicine.batchNo ||
+            !medicine.batchExpiry ||
+            !medicine.unitPerPack ||
+            !Number.isFinite(medicine.quantity) ||
+            !Number.isFinite(medicine.rate) ||
+            !Number.isFinite(medicine.mrp),
+        )
+      ) {
+        toast.error("Complete all medicine details before saving");
+        return;
+      }
+
+      await axios.post(
+        `${backendUrl}/api/stock/add`,
+        {
+          distributor: invoiceForm.distributor,
+          invoiceNumber: invoiceForm.invoiceNumber.trim(),
+          invoiceDate: invoiceForm.invoiceDate,
+          medicines,
+        },
+        { withCredentials: true },
+      );
 
       toast.success("Stock added successfully");
 
@@ -325,7 +426,22 @@ const Stock = () => {
           : inv.distributor.name || "";
       distributorName = distributorName.toLowerCase();
     }
-    return invNumber.includes(q) || distributorName.includes(q);
+    const searchMatch = invNumber.includes(q) || distributorName.includes(q);
+    const items = inv.items || inv.medicines || [];
+    const hasLowStock = items.some((item) => Number(item.quantity) < 5);
+    const hasExpired = items.some((item) => {
+      if (!item.batchExpiry) return false;
+      return new Date(`${item.batchExpiry}-01`) < new Date();
+    });
+
+    const statusMatch =
+      stockFilter === "low"
+        ? hasLowStock
+        : stockFilter === "expired"
+          ? hasExpired
+          : true;
+
+    return searchMatch && statusMatch;
   });
 
   const currentInvoices = filtered.slice(indexOfFirst, indexOfLast);
@@ -333,9 +449,48 @@ const Stock = () => {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [search]);
+  }, [search, stockFilter]);
+
+  const productCatalog = Array.from(
+    new Map(
+      data
+        .flatMap((invoice) => invoice.items || invoice.medicines || [])
+        .map((item) => [
+          (item.product || item.medicine || "").trim().toLowerCase(),
+          item,
+        ])
+        .filter(([name]) => name),
+    ).values(),
+  );
+
+  const productSuggestions = productCatalog
+    .filter((item) => {
+      const name = item.product || item.medicine || "";
+      return (
+        itemForm.product.trim() &&
+        name.toLowerCase().includes(itemForm.product.trim().toLowerCase())
+      );
+    })
+    .slice(0, 6);
+
+  const fillProductDetails = (item) => {
+    setItemForm((previous) => ({
+      ...previous,
+      product: item.product || item.medicine || "",
+      hsn: item.hsn || "",
+      batchNo: item.batchNo || "",
+      batchExpiry: item.batchExpiry || "",
+      gst: item.gst || "12%",
+      unitPerPack: item.unitPerPack || "",
+      quantity: item.quantity || "",
+      free: item.free || "0",
+      rate: item.rate || "",
+      mrp: item.mrp || "",
+    }));
+  };
+
   return (
-    <div className="max-w-6xl mx-auto bg-white/90 rounded-xl shadow-lg p-6 md:p-10 mt-8">
+    <div className="admin-page">
       <h2 className="text-2xl font-bold text-blue-700 mb-6 text-center">
         Stock Management
       </h2>
@@ -356,7 +511,7 @@ const Stock = () => {
       </div> */}
 
       {/* Search and Add Button */}
-      <div className="mb-6 flex flex-col sm:flex-row gap-3 items-center justify-between">
+      <div className="mb-6 flex flex-col xl:flex-row gap-3 items-center justify-between">
         <div className="w-full sm:w-80 relative bg-white rounded-xl border border-gray-100 shadow-sm px-3 py-2 flex items-center">
           <span className="text-blue-500 mr-2">
             <svg
@@ -392,9 +547,28 @@ const Stock = () => {
           )}
         </div>
 
+        <div className="stock-filter-group flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 p-1">
+          {["all", "low", "expired"].map((filter) => (
+            <button
+              key={filter}
+              type="button"
+              onClick={() => setStockFilter(filter)}
+              className={`stock-filter-button px-3 py-1.5 text-xs font-semibold ${
+                stockFilter === filter ? "is-selected" : ""
+              }`}
+            >
+              {filter === "all"
+                ? "All"
+                : filter === "low"
+                  ? "Low Stock"
+                  : "Expired"}
+            </button>
+          ))}
+        </div>
+
         <div className="flex items-center gap-2">
           <button
-            className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-2 rounded-full font-semibold shadow-lg hover:scale-[1.02] transform transition"
+            className="flex items-center gap-2 bg-linear-to-r from-blue-600 to-indigo-600 text-white px-4 py-2 rounded-full font-semibold shadow-lg hover:scale-[1.02] transform transition"
             onClick={() => setShowInvoiceForm(true)}
           >
             <svg
@@ -491,7 +665,7 @@ const Stock = () => {
             <button
               onSubmit={handleAddItem}
               type="submit"
-              className="bg-gradient-to-r from-blue-600 to-blue-400 text-white px-6 py-2 rounded-lg font-bold shadow hover:from-blue-700 hover:to-blue-500 transition text-lg mt-2"
+              className="bg-linear-to-r from-blue-600 to-blue-400 text-white px-6 py-2 rounded-lg font-bold shadow hover:from-blue-700 hover:to-blue-500 transition text-lg mt-2"
             >
               Next: Add Medicines
             </button>
@@ -502,8 +676,8 @@ const Stock = () => {
       {/* Step 2: Add Medicines Modal */}
       {showMedicineForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-3">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl overflow-hidden relative animate-fadeIn border border-blue-50 flex flex-col max-h-[85vh]">
-            <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-600 to-blue-400 text-white">
+          <div className="stock-medicine-modal bg-white rounded-2xl shadow-2xl w-full max-w-4xl overflow-hidden relative animate-fadeIn border border-blue-50 flex flex-col max-h-[85vh]">
+            <div className="flex items-center justify-between p-4 bg-linear-to-r from-blue-600 to-blue-400 text-white">
               <div className="flex items-center gap-3">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -530,6 +704,20 @@ const Stock = () => {
                 </div>
               </div>
               <div className="flex items-center gap-2">
+                <input
+                  ref={bulkImportRef}
+                  type="file"
+                  accept=".csv,text/csv"
+                  className="hidden"
+                  onChange={handleBulkImport}
+                />
+                <button
+                  type="button"
+                  className="stock-bulk-import rounded-lg bg-white/15 px-3 py-2 text-xs font-semibold text-white hover:bg-white/25"
+                  onClick={() => bulkImportRef.current?.click()}
+                >
+                  Bulk Import CSV
+                </button>
                 <button
                   type="button"
                   className="text-white/90 bg-white/10 hover:bg-white/20 rounded-full w-9 h-9 flex items-center justify-center"
@@ -547,13 +735,13 @@ const Stock = () => {
                 </button>
               </div>
             </div>
-            <div className="flex-1 overflow-hidden flex flex-col md:flex-row gap-4 p-4">
+            <div className="stock-medicine-modal__body flex-1 overflow-hidden flex flex-col md:flex-row gap-4 p-4">
               <div className="flex-1 overflow-y-auto pr-2">
                 <form
                   onSubmit={handleAddItem}
                   className="grid grid-cols-1 md:grid-cols-2 gap-3"
                 >
-                  <div className="flex flex-col gap-1">
+                  <div className="relative flex flex-col gap-1">
                     <label
                       htmlFor="medicine"
                       className="font-semibold text-blue-700"
@@ -572,6 +760,25 @@ const Stock = () => {
                       placeholder="Enter product name"
                       required
                     />
+                    {productSuggestions.length > 0 && (
+                      <div className="stock-product-suggestions absolute left-0 right-0 top-full z-30 mt-1 overflow-hidden rounded-lg border bg-white shadow-lg">
+                        {productSuggestions.map((item) => (
+                          <button
+                            key={`${item.product || item.medicine}-${item.batchNo || "batch"}`}
+                            type="button"
+                            className="stock-product-suggestion flex w-full items-center justify-between px-3 py-2 text-left text-sm"
+                            onClick={() => fillProductDetails(item)}
+                          >
+                            <span className="font-medium">
+                              {item.product || item.medicine}
+                            </span>
+                            <span className="text-xs text-slate-500">
+                              {item.batchNo || "Existing stock"}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   <div className="flex flex-col gap-1">
                     <label
@@ -770,7 +977,7 @@ const Stock = () => {
                   </div>
                   <button
                     type="submit"
-                    className="col-span-full md:col-span-2 bg-gradient-to-r from-indigo-600 to-indigo-400 text-white px-5 py-2 rounded-lg font-semibold shadow hover:from-indigo-700 hover:to-indigo-500 transition text-base mt-1"
+                    className="col-span-full md:col-span-2 bg-linear-to-r from-indigo-600 to-indigo-400 text-white px-5 py-2 rounded-lg font-semibold shadow hover:from-indigo-700 hover:to-indigo-500 transition text-base mt-1"
                   >
                     Add Medicine
                   </button>
@@ -844,7 +1051,7 @@ const Stock = () => {
                 Close
               </button>
               <button
-                className="px-5 py-2 rounded-lg bg-gradient-to-r from-green-600 to-green-400 text-white font-semibold hover:from-green-700 hover:to-green-500 disabled:opacity-60"
+                className="px-5 py-2 rounded-lg bg-linear-to-r from-green-600 to-green-400 text-white font-semibold hover:from-green-700 hover:to-green-500 disabled:opacity-60"
                 onClick={handleSaveStock}
                 disabled={currentItems.length === 0}
               >
